@@ -1,0 +1,43 @@
+# Web 框架
+flask
+flask-cors
+flask-socketio
+flask-limiter
+
+# 数据库
+pymongo[srv]
+redis
+
+# 异步任务
+celery
+
+# 认证
+pyjwt
+bcrypt
+
+# 数据采集
+feedparser
+goose3
+requests
+beautifulsoup4
+lxml
+
+# NLP + 数据分析
+jieba
+scikit-learn
+simhash
+
+# LLM API
+openai
+
+# 数据校验
+marshmallow
+
+# 安全
+bleach
+
+# 环境变量
+python-dotenv
+
+# 部署
+gunicorn

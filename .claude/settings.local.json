@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \":*)",
+      "Bash(npm create vite@latest frontend -- --template vue)",
+      "Bash(npm install)",
+      "Bash(npm install vue-router@4 pinia axios element-plus @element-plus/icons-vue)",
+      "Bash(npx vite build)",
+      "Bash(node -e \"const icons = require\\(''@element-plus/icons-vue''\\); const names = Object.keys\\(icons\\); console.log\\(names.filter\\(n => /news|paper|trend|chart|note|book|connect|rss|home|fold|expand|switch|link/i.test\\(n\\)\\).join\\('', ''\\)\\)\")",
+      "Bash(npx vite --host)",
+      "Bash(curl -s http://localhost:5000/api/auth/status)",
+      "Bash(curl -s http://localhost:5173/api/auth/status)",
+      "Bash(npm install vue-grid-layout@3)",
+      "Bash(npm view vue-grid-layout versions --json)",
+      "Bash(npm view vue3-grid-layout versions --json)",
+      "Bash(npm search grid layout vue3)",
+      "Bash(npm view grid-layout-plus versions --json)",
+      "Bash(npm install grid-layout-plus)",
+      "Bash(python:*)",
+      "Bash(pip install openai)",
+      "Bash(xargs grep -l \"vue-grid-layout\\\\|echarts\\\\|element-plus\")",
+      "Bash(xargs grep -l \"el-dialog\\\\|ContextMenu\\\\|context-menu\")",
+      "Bash(npm install md-editor-v3 splitpanes)",
+      "Bash(grep -E \"^-.*\\\\.\\(md|txt|json\\)$\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0IiwiZXhwIjoxNzczMTk0ODUzLCJpYXQiOjE3NzMxMDg0NTN9.xc3Ae2PT0HxGy3xKqJ7kwD7ZIFL_rQ_UA-GU1py0K9I\")",
+      "Bash(__NEW_LINE_c298d9f9b9ecb1e4__ echo \"=== Test 1: GET /api/chat/sessions \\(empty\\) ===\")",
+      "Bash(curl -s http://localhost:5001/api/chat/sessions -H \"Authorization: Bearer $TOKEN\")",
+      "Bash(__NEW_LINE_c298d9f9b9ecb1e4__ echo \"\")",
+      "Bash(curl -s -N -X POST http://localhost:5001/api/chat/message -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"\"content\"\": \"\"你好，请简短回复\"\", \"\"context\"\": {\"\"page\"\": \"\"general\"\"}}' --max-time 30)",
+      "Bash(npx vue-tsc --noEmit)",
+      "Bash(xargs wc -l)",
+      "Bash(npm install echarts echarts-wordcloud)"
+    ]
+  }
+}
