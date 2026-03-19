@@ -44,22 +44,23 @@ onUnmounted(() => {
 }
 
 .time {
-  font-size: 40px;
+  font-family: var(--font-display);
+  font-size: 42px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: #303133;
+  color: var(--text-primary);
   line-height: 1.2;
 }
 
 .date {
   font-size: 14px;
-  color: #606266;
+  color: var(--text-secondary);
   margin-top: 8px;
 }
 
 .weekday {
   font-size: 13px;
-  color: #909399;
+  color: var(--text-muted);
   margin-top: 4px;
 }
 </style>

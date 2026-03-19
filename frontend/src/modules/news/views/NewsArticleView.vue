@@ -2,7 +2,6 @@
   <div class="article-wrapper" v-loading="loading">
     <template v-if="article">
       <div class="article-page">
-        <!-- 顶部操作栏 -->
         <div class="article-toolbar">
           <el-button @click="$router.back()">
             <el-icon><ArrowLeft /></el-icon> 返回
@@ -12,7 +11,7 @@
               :type="article.is_read_later ? 'warning' : 'default'"
               @click="handleReadLater"
             >
-              <el-icon><Clock /></el-icon>
+              <el-icon><Collection /></el-icon>
               {{ article.is_read_later ? '已稍后读' : '稍后读' }}
             </el-button>
             <el-button @click="handleToNote" :loading="noteLoading">
@@ -24,14 +23,12 @@
           </div>
         </div>
 
-        <!-- 文章标题 -->
         <h1 class="article-title">{{ article.title }}</h1>
 
-        <!-- 元信息 -->
         <div class="article-meta">
           <span v-if="article.author">{{ article.author }}</span>
           <span>{{ formatDate(article.published_at) }}</span>
-          <el-tag v-for="tag in article.tags" :key="tag" size="small" type="info">
+          <el-tag v-for="tag in article.tags" :key="tag" size="small" effect="plain" round>
             {{ tag }}
           </el-tag>
         </div>
@@ -70,7 +67,7 @@
 <script setup>
 import { ref, onMounted, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, Clock, Link, MagicStick, WarningFilled, Loading, Notebook } from '@element-plus/icons-vue'
+import { ArrowLeft, Collection, Link, MagicStick, WarningFilled, Loading, Notebook } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import {
   getNewsArticle,
@@ -89,7 +86,6 @@ const loading = ref(true)
 const article = ref(null)
 const noteLoading = ref(false)
 
-// 摘要状态
 const summaryStatus = ref('none')
 const summaryText = ref('')
 const summaryLoading = ref(false)
@@ -102,7 +98,6 @@ async function loadArticle() {
     summaryStatus.value = res.data.summary_status || 'none'
     summaryText.value = res.data.summary || ''
 
-    // 设置 AI 对话上下文
     chatStore.setContext({
       page: 'news',
       articleId: res.data._id,
@@ -156,7 +151,7 @@ async function handleToNote() {
       message: h('span', null, [
         '已保存到笔记本 ',
         h('a', {
-          style: 'color: #409eff; cursor: pointer; text-decoration: underline;',
+          style: 'color: var(--accent); cursor: pointer; text-decoration: underline;',
           onClick: () => router.push(`/notes/${noteId}`),
         }, '去查看'),
       ]),
@@ -187,19 +182,20 @@ onMounted(loadArticle)
 }
 
 .article-page {
-  max-width: 800px;
+  max-width: 720px;
   margin: 0 auto;
-  background: #fff;
-  border-radius: 8px;
-  padding: 24px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 32px;
   min-height: 400px;
+  box-shadow: var(--shadow-sm);
 }
 
 .article-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .toolbar-actions {
@@ -208,9 +204,10 @@ onMounted(loadArticle)
 }
 
 .article-title {
-  font-size: 22px;
+  font-family: var(--font-display);
+  font-size: 24px;
   font-weight: 700;
-  color: #303133;
+  color: var(--text-primary);
   line-height: 1.4;
   margin-bottom: 12px;
 }
@@ -221,39 +218,41 @@ onMounted(loadArticle)
   gap: 8px;
   align-items: center;
   font-size: 13px;
-  color: #909399;
-  margin-bottom: 16px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-light);
 }
 
 /* 摘要区域 */
 .summary-section {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .summary-box {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   padding: 12px 16px;
   font-size: 13px;
 }
 
 .summary-none {
-  background: #f5f7fa;
-  color: #909399;
+  background: var(--bg-hover);
+  color: var(--text-muted);
   align-items: center;
 }
 
 .summary-loading {
-  background: #ecf5ff;
-  color: #409eff;
+  background: var(--accent-light);
+  color: var(--accent);
   align-items: center;
 }
 
 .summary-done {
-  background: #f0f9eb;
-  color: #303133;
+  background: var(--accent-light);
+  color: var(--text-primary);
   flex-direction: column;
   gap: 6px;
 }
@@ -263,7 +262,7 @@ onMounted(loadArticle)
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  color: #67c23a;
+  color: var(--accent);
   font-size: 13px;
 }
 
@@ -280,18 +279,30 @@ onMounted(loadArticle)
 }
 
 .article-content {
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.8;
-  color: #303133;
+  color: var(--text-primary);
   word-break: break-word;
+}
+
+.article-content :deep(p) {
+  margin-bottom: 1.2em;
 }
 
 .article-content :deep(img) {
   max-width: 100%;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
+  margin: 16px 0;
 }
 
 .article-content :deep(a) {
-  color: #409eff;
+  color: var(--accent);
+}
+
+.article-content :deep(blockquote) {
+  border-left: 3px solid var(--accent);
+  padding-left: 16px;
+  color: var(--text-secondary);
+  margin: 16px 0;
 }
 </style>

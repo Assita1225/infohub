@@ -7,6 +7,8 @@ from .services import (
     get_widget_layout, save_widget_layout,
     get_weather_city, save_weather_city,
     list_todos, create_todo, update_todo, delete_todo,
+    get_active_widgets, save_active_widgets,
+    list_countdowns, create_countdown, delete_countdown,
 )
 
 
@@ -82,4 +84,52 @@ def edit_todo(todo_id):
 def remove_todo(todo_id):
     if not delete_todo(todo_id):
         return fail("待办事项不存在", 404)
+    return success(None, "删除成功")
+
+
+# ── 活跃微件列表 ──
+
+@dashboard_bp.route('/active-widgets', methods=['GET'])
+@login_required
+def get_active():
+    return success(get_active_widgets())
+
+
+@dashboard_bp.route('/active-widgets', methods=['PUT'])
+@login_required
+def put_active():
+    data = request.get_json(silent=True)
+    if not isinstance(data, list):
+        return fail("数据必须是数组")
+    save_active_widgets(data)
+    return success(data, "已保存")
+
+
+# ── 倒计时 CRUD ──
+
+@dashboard_bp.route('/countdowns', methods=['GET'])
+@login_required
+def get_countdowns():
+    return success(list_countdowns())
+
+
+@dashboard_bp.route('/countdowns', methods=['POST'])
+@login_required
+def add_countdown():
+    data = request.get_json(silent=True) or {}
+    name = data.get('name', '').strip()
+    target_date = data.get('target_date', '').strip()
+    if not name:
+        return fail("事件名称不能为空")
+    if not target_date:
+        return fail("目标日期不能为空")
+    countdown = create_countdown(name, target_date)
+    return success(countdown, "创建成功")
+
+
+@dashboard_bp.route('/countdowns/<countdown_id>', methods=['DELETE'])
+@login_required
+def remove_countdown(countdown_id):
+    if not delete_countdown(countdown_id):
+        return fail("倒计时不存在", 404)
     return success(None, "删除成功")

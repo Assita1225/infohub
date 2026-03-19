@@ -8,12 +8,15 @@
     </div>
 
     <div v-loading="loading" class="article-list">
-      <el-empty v-if="!loading && articles.length === 0" description="暂无稍后读文章" />
+      <div v-if="!loading && articles.length === 0" class="empty-state">
+        <el-icon :size="48" color="var(--text-muted)"><Collection /></el-icon>
+        <p>暂无稍后读文章</p>
+      </div>
 
       <div
         v-for="article in articles"
         :key="article._id"
-        class="article-item"
+        class="article-item card"
         @click="$router.push(`/news/article/${article._id}`)"
       >
         <div class="item-content">
@@ -48,7 +51,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { ArrowLeft } from '@element-plus/icons-vue'
+import { ArrowLeft, Collection } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getReadLaterList, removeReadLater } from '../api'
 
@@ -99,32 +102,26 @@ onMounted(loadList)
 }
 
 .page-title {
+  font-family: var(--font-display);
   font-size: 18px;
   font-weight: 600;
   margin: 0;
+  color: var(--text-primary);
 }
 
 .article-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid #e4e7ed;
+  padding: 16px 20px;
   margin-bottom: 8px;
   cursor: pointer;
-  transition: box-shadow 0.2s;
-}
-
-.article-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .item-title {
   font-size: 15px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-primary);
   margin: 0 0 4px;
 }
 
@@ -132,7 +129,18 @@ onMounted(loadList)
   display: flex;
   gap: 12px;
   font-size: 12px;
-  color: #909399;
+  color: var(--text-muted);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  gap: 12px;
 }
 
 .pagination {

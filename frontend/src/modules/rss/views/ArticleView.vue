@@ -33,7 +33,6 @@
 
       <!-- 普通模式 -->
       <div v-else class="article-page">
-        <!-- 顶部操作栏 -->
         <div class="article-toolbar">
           <el-button @click="$router.back()">
             <el-icon><ArrowLeft /></el-icon> 返回
@@ -51,14 +50,12 @@
           </div>
         </div>
 
-        <!-- 文章标题 -->
         <h1 class="article-title">{{ article.title }}</h1>
 
-        <!-- 元信息 -->
         <div class="article-meta">
           <span v-if="article.author">{{ article.author }}</span>
           <span>{{ formatDate(article.published_at) }}</span>
-          <el-tag v-for="tag in article.tags" :key="tag" size="small" type="info">
+          <el-tag v-for="tag in article.tags" :key="tag" size="small" effect="plain" round>
             {{ tag }}
           </el-tag>
         </div>
@@ -125,18 +122,15 @@ const loading = ref(true)
 const article = ref(null)
 const noteLoading = ref(false)
 
-// 摘要状态
 const summaryStatus = ref('none')
 const summaryText = ref('')
 const summaryLoading = ref(false)
 
-// 右键菜单
 const ctxMenuVisible = ref(false)
 const ctxMenuX = ref(0)
 const ctxMenuY = ref(0)
 const selectedText = ref('')
 
-// 分屏模式
 const splitMode = ref(false)
 const splitSize = ref(50)
 const splitNoteTitle = ref('')
@@ -178,7 +172,6 @@ function openOriginal() {
   window.open(article.value.url, '_blank')
 }
 
-// 保存到笔记本
 async function handleSaveToNote() {
   noteLoading.value = true
   try {
@@ -189,7 +182,7 @@ async function handleSaveToNote() {
       message: h('span', null, [
         '已保存到笔记本 ',
         h('a', {
-          style: 'color: #409eff; cursor: pointer; text-decoration: underline;',
+          style: 'color: var(--accent); cursor: pointer; text-decoration: underline;',
           onClick: () => router.push(`/notes/${noteId}`),
         }, '去查看'),
       ]),
@@ -202,7 +195,6 @@ async function handleSaveToNote() {
   }
 }
 
-// 右键菜单
 function onContextMenu(e) {
   const sel = window.getSelection()
   const text = sel ? sel.toString().trim() : ''
@@ -232,7 +224,6 @@ function hideCtxMenu() {
   ctxMenuVisible.value = false
 }
 
-// 分屏模式
 function enterSplitMode() {
   splitNoteTitle.value = article.value.title || ''
   splitNoteContent.value = ''
@@ -306,7 +297,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   padding: 12px;
-  background: #fff;
+  background: var(--bg-card);
 }
 
 .split-editor-toolbar {
@@ -316,19 +307,20 @@ onBeforeUnmount(() => {
 }
 
 .article-page {
-  max-width: 800px;
+  max-width: 720px;
   margin: 0 auto;
-  background: #fff;
-  border-radius: 8px;
-  padding: 24px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 32px;
   min-height: 400px;
+  box-shadow: var(--shadow-sm);
 }
 
 .article-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .toolbar-actions {
@@ -337,9 +329,10 @@ onBeforeUnmount(() => {
 }
 
 .article-title {
-  font-size: 22px;
+  font-family: var(--font-display);
+  font-size: 24px;
   font-weight: 700;
-  color: #303133;
+  color: var(--text-primary);
   line-height: 1.4;
   margin-bottom: 12px;
 }
@@ -350,39 +343,41 @@ onBeforeUnmount(() => {
   gap: 8px;
   align-items: center;
   font-size: 13px;
-  color: #909399;
-  margin-bottom: 16px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-light);
 }
 
 /* 摘要区域 */
 .summary-section {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .summary-box {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   padding: 12px 16px;
   font-size: 13px;
 }
 
 .summary-none {
-  background: #f5f7fa;
-  color: #909399;
+  background: var(--bg-hover);
+  color: var(--text-muted);
   align-items: center;
 }
 
 .summary-loading {
-  background: #ecf5ff;
-  color: #409eff;
+  background: var(--accent-light);
+  color: var(--accent);
   align-items: center;
 }
 
 .summary-done {
-  background: #f0f9eb;
-  color: #303133;
+  background: var(--accent-light);
+  color: var(--text-primary);
   flex-direction: column;
   gap: 6px;
 }
@@ -392,7 +387,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  color: #67c23a;
+  color: var(--accent);
   font-size: 13px;
 }
 
@@ -408,50 +403,70 @@ onBeforeUnmount(() => {
   align-items: center;
 }
 
+/* 正文 - Medium 风格阅读体验 */
 .article-content {
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.8;
-  color: #303133;
+  color: var(--text-primary);
   word-break: break-word;
+}
+
+.article-content :deep(p) {
+  margin-bottom: 1.2em;
 }
 
 .article-content :deep(img) {
   max-width: 100%;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
+  margin: 16px 0;
 }
 
 .article-content :deep(a) {
-  color: #409eff;
+  color: var(--accent);
 }
 
 .article-content :deep(pre) {
-  background: #f5f7fa;
-  padding: 12px;
-  border-radius: 4px;
+  background: var(--bg-secondary);
+  padding: 16px;
+  border-radius: var(--radius-md);
   overflow-x: auto;
+  font-size: 14px;
+}
+
+.article-content :deep(blockquote) {
+  border-left: 3px solid var(--accent);
+  padding-left: 16px;
+  color: var(--text-secondary);
+  margin: 16px 0;
+}
+
+.article-content :deep(h2),
+.article-content :deep(h3) {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
 }
 
 /* 右键菜单 */
 .context-menu {
   position: fixed;
   z-index: 9999;
-  background: #fff;
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
   padding: 4px 0;
 }
 
 .context-menu-item {
   padding: 8px 16px;
   font-size: 13px;
-  color: #303133;
+  color: var(--text-primary);
   cursor: pointer;
   white-space: nowrap;
 }
 
 .context-menu-item:hover {
-  background: #ecf5ff;
-  color: #409eff;
+  background: var(--accent-light);
+  color: var(--accent);
 }
 </style>

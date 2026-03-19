@@ -1,8 +1,10 @@
 <template>
   <div class="lock-page">
     <div class="lock-card">
-      <h1 class="lock-title">InfoHub</h1>
-      <p class="lock-subtitle">个人信息聚合与智能分析终端</p>
+      <div class="lock-brand">
+        <h1 class="lock-logo">InfoHub</h1>
+        <p class="lock-slogan">你的个人信息中枢</p>
+      </div>
       <el-form @submit.prevent="handleUnlock" class="lock-form">
         <el-form-item>
           <el-input
@@ -64,35 +66,43 @@ async function handleUnlock() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(160deg, var(--bg-secondary) 0%, var(--bg-primary) 50%, var(--accent-light) 100%);
 }
 
 .lock-card {
-  background: #fff;
-  border-radius: 12px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
   padding: 48px 40px;
-  width: 400px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--shadow-lg);
   text-align: center;
 }
 
-.lock-title {
-  font-size: 28px;
-  color: #303133;
-  margin-bottom: 8px;
-}
-
-.lock-subtitle {
-  font-size: 14px;
-  color: #909399;
+.lock-brand {
   margin-bottom: 32px;
 }
 
+.lock-logo {
+  font-family: var(--font-display);
+  font-size: 32px;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+  letter-spacing: 1px;
+}
+
+.lock-slogan {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
 .lock-form {
-  margin-top: 16px;
+  margin-top: 8px;
 }
 
 .lock-btn {
   width: 100%;
+  margin-top: 8px;
 }
 </style>

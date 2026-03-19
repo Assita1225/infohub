@@ -1,8 +1,11 @@
 <template>
   <div class="setup-page">
     <div class="setup-card">
-      <h1 class="setup-title">欢迎使用 InfoHub</h1>
-      <p class="setup-subtitle">首次使用，请设置一个访问密码</p>
+      <div class="setup-brand">
+        <h1 class="setup-logo">InfoHub</h1>
+        <p class="setup-slogan">你的个人信息中枢</p>
+      </div>
+      <p class="setup-hint">首次使用，请设置一个访问密码</p>
       <el-form @submit.prevent="handleSetup" class="setup-form">
         <el-form-item>
           <el-input
@@ -78,35 +81,49 @@ async function handleSetup() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  background: linear-gradient(160deg, var(--bg-secondary) 0%, var(--bg-primary) 50%, var(--accent-light) 100%);
 }
 
 .setup-card {
-  background: #fff;
-  border-radius: 12px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
   padding: 48px 40px;
-  width: 400px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--shadow-lg);
   text-align: center;
 }
 
-.setup-title {
-  font-size: 28px;
-  color: #303133;
-  margin-bottom: 8px;
+.setup-brand {
+  margin-bottom: 16px;
 }
 
-.setup-subtitle {
+.setup-logo {
+  font-family: var(--font-display);
+  font-size: 32px;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+  letter-spacing: 1px;
+}
+
+.setup-slogan {
   font-size: 14px;
-  color: #909399;
-  margin-bottom: 32px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.setup-hint {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0 0 24px;
 }
 
 .setup-form {
-  margin-top: 16px;
+  margin-top: 8px;
 }
 
 .setup-btn {
   width: 100%;
+  margin-top: 8px;
 }
 </style>

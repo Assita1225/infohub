@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import feedparser
 import requests
 
+from app.common.http_client import http_get
 from .base import NewsAdapter
 
 logger = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ class GoogleRssAdapter(NewsAdapter):
         page_size = source_config.get("page_size", 20)
 
         try:
-            resp = requests.get(url, headers=REQUEST_HEADERS, timeout=30)
+            resp = http_get(url, headers=REQUEST_HEADERS, timeout=30)
             resp.raise_for_status()
             parsed = feedparser.parse(resp.content)
             if parsed.bozo and not parsed.entries:

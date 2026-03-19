@@ -1,0 +1,113 @@
+/* Element Plus 主题覆盖 — 将默认蓝色替换为赤陶橘 */
+
+:root {
+  /* 主色 */
+  --el-color-primary: var(--accent);
+  --el-color-primary-light-3: #d4826e;
+  --el-color-primary-light-5: #e2a99a;
+  --el-color-primary-light-7: #efc9bf;
+  --el-color-primary-light-8: #f5ddd6;
+  --el-color-primary-light-9: #faeee9;
+  --el-color-primary-dark-2: var(--accent-hover);
+
+  /* 字体 */
+  --el-font-family: var(--font-body);
+  --el-font-size-base: 14px;
+
+  /* 圆角 */
+  --el-border-radius-base: var(--radius-md);
+  --el-border-radius-small: var(--radius-sm);
+  --el-border-radius-round: 20px;
+
+  /* 边框 */
+  --el-border-color: var(--border);
+  --el-border-color-light: var(--border-light);
+  --el-border-color-lighter: var(--border-light);
+  --el-border-color-hover: var(--accent);
+
+  /* 背景 */
+  --el-bg-color: var(--bg-primary);
+  --el-bg-color-overlay: var(--bg-card);
+  --el-fill-color-blank: var(--bg-input);
+  --el-fill-color-light: var(--bg-hover);
+
+  /* 文字 */
+  --el-text-color-primary: var(--text-primary);
+  --el-text-color-regular: var(--text-primary);
+  --el-text-color-secondary: var(--text-secondary);
+  --el-text-color-placeholder: var(--text-muted);
+
+  /* 阴影 */
+  --el-box-shadow: var(--shadow-md);
+  --el-box-shadow-light: var(--shadow-sm);
+}
+
+/* 按钮 */
+.el-button--primary {
+  --el-button-bg-color: var(--accent);
+  --el-button-border-color: var(--accent);
+  --el-button-hover-bg-color: var(--accent-hover);
+  --el-button-hover-border-color: var(--accent-hover);
+  --el-button-active-bg-color: #9E4229;
+  --el-button-active-border-color: #9E4229;
+}
+
+/* 链接 */
+.el-link--primary,
+.el-link--primary .el-link__inner {
+  color: var(--accent);
+}
+.el-link--primary:hover {
+  color: var(--accent-hover);
+}
+
+/* 开关 */
+.el-switch.is-checked .el-switch__core {
+  border-color: var(--accent);
+  background-color: var(--accent);
+}
+
+/* 标签页 */
+.el-tabs__active-bar {
+  background-color: var(--accent);
+}
+.el-tabs__item.is-active {
+  color: var(--accent);
+}
+.el-tabs__item:hover {
+  color: var(--accent-hover);
+}
+
+/* 复选框 / 单选框 */
+.el-checkbox__input.is-checked .el-checkbox__inner {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+.el-checkbox__input.is-checked + .el-checkbox__label {
+  color: var(--accent);
+}
+.el-radio__input.is-checked .el-radio__inner {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+.el-radio__input.is-checked + .el-radio__label {
+  color: var(--accent);
+}
+
+/* 分页 */
+.el-pagination.is-background .el-pager li:not(.is-disabled).is-active {
+  background-color: var(--accent);
+}
+
+/* 消息提示 */
+.el-message--success {
+  --el-message-bg-color: var(--accent-light);
+  --el-message-text-color: var(--accent);
+  --el-message-border-color: #e8c8bf;
+}
+
+/* 输入框聚焦 */
+.el-input__wrapper:focus-within,
+.el-textarea__inner:focus {
+  box-shadow: 0 0 0 1px var(--accent) inset !important;
+}

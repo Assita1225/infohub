@@ -3,16 +3,17 @@
     <!-- 顶部操作栏 -->
     <div class="rss-toolbar">
       <div class="group-tabs">
-        <el-radio-group v-model="activeGroup" size="default" @change="loadFeeds">
-          <el-radio-button label="全部" value="" />
-          <el-radio-button
-            v-for="g in groups"
-            :key="g.name"
-            :label="`${g.name} (${g.count})`"
-            :value="g.name"
-          />
-        </el-radio-group>
-        <el-button text size="small" @click="showGroupDialog = true" style="margin-left: 8px">
+        <button
+          :class="['pill-btn', { active: activeGroup === '' }]"
+          @click="activeGroup = ''; loadFeeds()"
+        >全部</button>
+        <button
+          v-for="g in groups"
+          :key="g.name"
+          :class="['pill-btn', { active: activeGroup === g.name }]"
+          @click="activeGroup = g.name; loadFeeds()"
+        >{{ g.name }} ({{ g.count }})</button>
+        <el-button text size="small" @click="showGroupDialog = true" style="margin-left: 4px">
           <el-icon><Setting /></el-icon>
         </el-button>
       </div>
@@ -26,51 +27,58 @@
 
     <!-- 订阅源卡片网格 -->
     <div class="feed-grid" v-loading="loading">
-      <div v-for="feed in feeds" :key="feed._id" class="feed-card">
-        <div class="feed-header">
-          <span class="feed-title">{{ feed.title }}</span>
-          <el-button
-            text
-            size="small"
-            :loading="feed._refreshing"
-            @click="handleRefreshFeed(feed)"
-          >
-            <el-icon><Refresh /></el-icon>
-          </el-button>
-        </div>
-        <div class="feed-meta">
-          <el-tag size="small" type="info">{{ feed.group }}</el-tag>
-          <span v-if="feed.last_fetched_at" class="feed-time">
-            {{ formatTime(feed.last_fetched_at) }}
-          </span>
-          <span v-else class="feed-time">未刷新</span>
-        </div>
-        <div v-if="feed.error_count > 0" class="feed-error">
-          <el-icon color="#f56c6c"><WarningFilled /></el-icon>
-          <span>{{ feed.last_error }}</span>
-        </div>
-        <!-- 文章列表 -->
-        <div class="feed-articles">
-          <div
-            v-for="a in feed._articles"
-            :key="a._id"
-            class="article-row"
-            :class="{ read: a.is_read }"
-            @click="$router.push(`/rss/article/${a._id}`)"
-          >
-            <span class="article-title">{{ a.title }}</span>
+      <div v-for="(feed, fi) in feeds" :key="feed._id" class="feed-card card">
+        <div class="feed-color-bar" :style="{ background: groupColors[fi % groupColors.length] }" />
+        <div class="feed-body">
+          <div class="feed-header">
+            <span class="feed-title">{{ feed.title }}</span>
+            <button
+              class="refresh-btn"
+              :class="{ spinning: feed._refreshing }"
+              @click="handleRefreshFeed(feed)"
+            >
+              <el-icon><Refresh /></el-icon>
+            </button>
           </div>
-          <div v-if="feed._articles && feed._articles.length === 0" class="no-articles">
-            暂无文章，点击刷新
+          <div class="feed-meta">
+            <el-tag size="small" effect="plain" round>{{ feed.group }}</el-tag>
+            <el-tag v-if="feed.feed_type === 'web_monitor'" size="small" type="warning" effect="plain" round>网页监控</el-tag>
+            <span v-if="feed.last_fetched_at" class="feed-time">
+              {{ formatTime(feed.last_fetched_at) }}
+            </span>
+            <span v-else class="feed-time">未刷新</span>
+          </div>
+          <div v-if="feed.error_count > 0" class="feed-error">
+            <el-icon color="#f56c6c"><WarningFilled /></el-icon>
+            <span>{{ feed.last_error }}</span>
+          </div>
+          <!-- 文章列表 -->
+          <div class="feed-articles">
+            <div
+              v-for="a in feed._articles"
+              :key="a._id"
+              class="article-row"
+              :class="{ read: a.is_read }"
+              @click="$router.push(`/rss/article/${a._id}`)"
+            >
+              <span class="article-title">{{ a.title }}</span>
+            </div>
+            <div v-if="feed._articles && feed._articles.length === 0" class="no-articles">
+              暂无文章，点击刷新
+            </div>
           </div>
         </div>
       </div>
-      <el-empty v-if="!loading && feeds.length === 0" description="暂无订阅源，去添加一个吧" />
+
+      <div v-if="!loading && feeds.length === 0" class="empty-state">
+        <el-icon :size="48" color="var(--text-muted)"><Connection /></el-icon>
+        <p>还没有订阅源，去添加一个？</p>
+        <el-button type="primary" @click="$router.push('/rss/manage')">添加订阅源</el-button>
+      </div>
     </div>
 
     <!-- 分组管理对话框 -->
     <el-dialog v-model="showGroupDialog" title="管理分组" width="460px">
-      <!-- 新建分组 -->
       <div class="group-add-row">
         <el-input
           v-model="newGroupName"
@@ -82,7 +90,6 @@
           添加
         </el-button>
       </div>
-      <!-- 分组列表 -->
       <div class="group-list">
         <div v-for="g in groups" :key="g.name" class="group-item">
           <template v-if="editingGroup === g.name">
@@ -113,12 +120,14 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { Refresh, WarningFilled, Setting } from '@element-plus/icons-vue'
+import { Refresh, WarningFilled, Setting, Connection } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import {
   getFeeds, getFeedGroups, refreshFeed, refreshAllFeeds, getFeedArticles,
   createGroup, renameGroup, deleteGroup,
 } from '../api'
+
+const groupColors = ['#C45A3C', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6']
 
 const loading = ref(false)
 const refreshingAll = ref(false)
@@ -126,7 +135,6 @@ const activeGroup = ref('')
 const groups = ref([])
 const feeds = ref([])
 
-// 分组管理
 const showGroupDialog = ref(false)
 const newGroupName = ref('')
 const editingGroup = ref(null)
@@ -192,7 +200,6 @@ async function handleRefreshAll() {
   }
 }
 
-// 分组操作
 async function handleAddGroup() {
   const name = newGroupName.value.trim()
   if (!name) return
@@ -256,24 +263,51 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.rss-page {
-  padding: 0;
+/* 胶囊标签 */
+.group-tabs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pill-btn {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.pill-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.pill-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
 }
 
 .rss-toolbar {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 20px;
   flex-wrap: wrap;
   gap: 12px;
 }
 
-.group-tabs {
+.toolbar-actions {
   display: flex;
-  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
+/* 卡片网格 */
 .feed-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -281,10 +315,21 @@ onMounted(() => {
 }
 
 .feed-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  display: flex;
+  overflow: hidden;
+  padding: 0;
+}
+
+.feed-color-bar {
+  width: 4px;
+  flex-shrink: 0;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+
+.feed-body {
+  flex: 1;
+  padding: 16px 20px;
+  min-width: 0;
 }
 
 .feed-header {
@@ -296,7 +341,27 @@ onMounted(() => {
 .feed-title {
   font-size: 15px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-primary);
+}
+
+.refresh-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s;
+}
+.refresh-btn:hover {
+  color: var(--accent);
+}
+.refresh-btn.spinning .el-icon {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .feed-meta {
@@ -308,7 +373,7 @@ onMounted(() => {
 
 .feed-time {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-muted);
 }
 
 .feed-error {
@@ -325,25 +390,30 @@ onMounted(() => {
 
 .feed-articles {
   margin-top: 12px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-light);
   padding-top: 8px;
 }
 
 .article-row {
   padding: 6px 0;
   cursor: pointer;
-  border-bottom: 1px solid #fafafa;
+  border-bottom: 1px solid var(--border-light);
+  transition: background 0.1s;
+}
+
+.article-row:last-child {
+  border-bottom: none;
 }
 
 .article-row:hover {
-  background: #f5f7fa;
-  margin: 0 -16px;
-  padding: 6px 16px;
+  background: var(--bg-hover);
+  margin: 0 -20px;
+  padding: 6px 20px;
 }
 
 .article-title {
   font-size: 13px;
-  color: #303133;
+  color: var(--text-primary);
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
@@ -351,14 +421,26 @@ onMounted(() => {
 }
 
 .article-row.read .article-title {
-  color: #b0b0b0;
+  color: var(--text-muted);
 }
 
 .no-articles {
   font-size: 13px;
-  color: #c0c4cc;
+  color: var(--text-muted);
   text-align: center;
   padding: 16px 0;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  gap: 12px;
 }
 
 /* 分组管理对话框 */
@@ -378,23 +460,23 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 8px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .group-name {
   font-size: 14px;
-  color: #303133;
+  color: var(--text-primary);
   flex: 1;
 }
 
 .group-count {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-muted);
 }
 
 .no-groups {
   text-align: center;
-  color: #c0c4cc;
+  color: var(--text-muted);
   padding: 20px 0;
 }
 </style>

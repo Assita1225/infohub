@@ -50,18 +50,15 @@ const days = computed(() => {
 
   const result = []
 
-  // 上月补齐
   for (let i = firstDay - 1; i >= 0; i--) {
     result.push({ num: daysInPrev - i, current: false, isToday: false })
   }
 
-  // 本月
   for (let d = 1; d <= daysInMonth; d++) {
     const isToday = d === today.getDate() && m === today.getMonth() && y === today.getFullYear()
     result.push({ num: d, current: true, isToday })
   }
 
-  // 下月补齐到 42 格（6 行）
   const remaining = 42 - result.length
   for (let d = 1; d <= remaining; d++) {
     result.push({ num: d, current: false, isToday: false })
@@ -90,7 +87,7 @@ const days = computed(() => {
 .cal-title {
   font-size: 14px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-primary);
 }
 
 .cal-weekdays {
@@ -98,7 +95,7 @@ const days = computed(() => {
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
   font-size: 12px;
-  color: #909399;
+  color: var(--text-muted);
   margin-bottom: 4px;
 }
 
@@ -115,16 +112,16 @@ const days = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  color: #303133;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
 }
 
 .cal-days .other-month {
-  color: #c0c4cc;
+  color: var(--border);
 }
 
 .cal-days .today {
-  background: #409eff;
+  background: var(--accent);
   color: #fff;
   font-weight: 700;
 }

@@ -24,5 +24,9 @@ export const addCustomTag = (tag) =>
 export const deleteCustomTag = (tag) =>
   request.delete(`/recommend/tags/${encodeURIComponent(tag)}`)
 
-export const getRecommendFeed = (tags) =>
-  request.get('/recommend/feed', { params: { tags: tags.join(',') } })
+export const getRecommendFeed = (tagsWithWeights) =>
+  request.get('/recommend/feed', {
+    params: {
+      tags: tagsWithWeights.map(t => `${t.name}:${t.weight}`).join(',')
+    }
+  })

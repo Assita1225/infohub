@@ -1,0 +1,33 @@
+:root {
+  /* 配色方案 — Claude.ai 暖色调 */
+  --bg-primary: #FAF9F6;
+  --bg-secondary: #F0EDE8;
+  --bg-sidebar: #2C2B28;
+  --bg-card: #FFFFFF;
+  --bg-hover: #F5F2ED;
+  --bg-input: #FFFFFF;
+
+  --text-primary: #1A1918;
+  --text-secondary: #6B6560;
+  --text-muted: #9B9590;
+  --text-inverse: #FAF9F6;
+
+  --accent: #C45A3C;
+  --accent-hover: #B04E32;
+  --accent-light: #F5E6E0;
+
+  --border: #E5E0DA;
+  --border-light: #EDE9E3;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  /* 字体 */
+  --font-body: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', -apple-system, sans-serif;
+  --font-display: Georgia, 'Noto Serif SC', serif;
+}

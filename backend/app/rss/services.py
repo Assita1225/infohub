@@ -34,6 +34,8 @@ def create_feed(data):
         "url": data["url"],
         "site_url": data.get("site_url", ""),
         "group": data.get("group", "未分组"),
+        "feed_type": data.get("feed_type", "rss"),       # "rss" | "web_monitor"
+        "css_selector": data.get("css_selector", ""),     # 网页监控的 CSS 选择器（可选）
         "is_active": True,
         "display_count": data.get("display_count", 5),
         "last_fetched_at": None,
@@ -47,7 +49,7 @@ def create_feed(data):
 
 
 def update_feed(feed_id, data):
-    allowed = {"title", "url", "site_url", "group", "is_active", "display_count"}
+    allowed = {"title", "url", "site_url", "group", "is_active", "display_count", "feed_type", "css_selector"}
     update_fields = {k: v for k, v in data.items() if k in allowed}
     if not update_fields:
         return None

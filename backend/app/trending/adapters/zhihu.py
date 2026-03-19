@@ -5,6 +5,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
+from app.common.http_client import http_get
 from .base import TrendingAdapter
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ class ZhihuTrendingAdapter(TrendingAdapter):
     source_name = "zhihu"
 
     def fetch(self) -> list[dict]:
-        resp = requests.get(
+        resp = http_get(
             "https://www.zhihu.com/hot",
             headers=HEADERS,
             timeout=15,

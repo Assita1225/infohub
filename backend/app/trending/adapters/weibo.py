@@ -3,6 +3,7 @@ import logging
 
 import requests
 
+from app.common.http_client import http_get
 from .base import TrendingAdapter
 
 logger = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ class WeiboTrendingAdapter(TrendingAdapter):
     source_name = "weibo"
 
     def fetch(self) -> list[dict]:
-        resp = requests.get(
+        resp = http_get(
             "https://weibo.com/ajax/side/hotSearch",
             headers=HEADERS,
             timeout=15,

@@ -1,5 +1,5 @@
 <template>
-  <div class="manage-page">
+  <div class="manage-page card">
     <div class="manage-header">
       <el-button @click="$router.push('/rss')">
         <el-icon><ArrowLeft /></el-icon> 返回
@@ -12,11 +12,17 @@
     <el-table :data="feeds" v-loading="loading" stripe>
       <el-table-column prop="title" label="名称" min-width="160" />
       <el-table-column prop="url" label="URL" min-width="240" show-overflow-tooltip />
+      <el-table-column label="类型" width="120">
+        <template #default="{ row }">
+          <el-tag v-if="row.feed_type === 'web_monitor'" type="warning" size="small" round>网页监控</el-tag>
+          <el-tag v-else type="" size="small" round>RSS</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column prop="group" label="分组" width="120" />
       <el-table-column label="状态" width="100">
         <template #default="{ row }">
-          <el-tag v-if="row.error_count > 0" type="danger" size="small">异常</el-tag>
-          <el-tag v-else type="success" size="small">正常</el-tag>
+          <el-tag v-if="row.error_count > 0" type="danger" size="small" round>异常</el-tag>
+          <el-tag v-else type="success" size="small" round>正常</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="160" fixed="right">
@@ -34,11 +40,21 @@
     <!-- 添加/编辑对话框 -->
     <el-dialog v-model="showDialog" :title="editId ? '编辑订阅源' : '添加订阅源'" width="480px">
       <el-form :model="form" label-width="80px">
+        <el-form-item label="类型">
+          <el-radio-group v-model="form.feed_type">
+            <el-radio value="rss">RSS Feed</el-radio>
+            <el-radio value="web_monitor">网页监控</el-radio>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item label="名称">
-          <el-input v-model="form.title" placeholder="如：阮一峰的博客" />
+          <el-input v-model="form.title" placeholder="如：xxx的博客" />
         </el-form-item>
         <el-form-item label="URL">
-          <el-input v-model="form.url" placeholder="RSS Feed URL" />
+          <el-input v-model="form.url" :placeholder="form.feed_type === 'web_monitor' ? '网页地址，如 https://example.com/blog' : 'RSS Feed URL'" />
+        </el-form-item>
+        <el-form-item v-if="form.feed_type === 'web_monitor'" label="CSS选择器">
+          <el-input v-model="form.css_selector" placeholder="可选，如 .article-list 精准定位文章区域" />
+          <div class="form-tip">不填则自动提取页面中标题长度大于10字符的链接</div>
         </el-form-item>
         <el-form-item label="分组">
           <el-select v-model="form.group" filterable allow-create placeholder="选择或新建分组">
@@ -67,7 +83,7 @@ const groups = ref([])
 const showAdd = ref(false)
 const editId = ref(null)
 
-const form = reactive({ title: '', url: '', group: '未分组' })
+const form = reactive({ title: '', url: '', group: '未分组', feed_type: 'rss', css_selector: '' })
 
 const showDialog = computed({
   get: () => showAdd.value || !!editId.value,
@@ -89,6 +105,8 @@ function startEdit(row) {
   form.title = row.title
   form.url = row.url
   form.group = row.group
+  form.feed_type = row.feed_type || 'rss'
+  form.css_selector = row.css_selector || ''
 }
 
 async function handleSave() {
@@ -106,7 +124,7 @@ async function handleSave() {
       ElMessage.success('添加成功')
     }
     showDialog.value = false
-    form.title = ''; form.url = ''; form.group = '未分组'
+    form.title = ''; form.url = ''; form.group = '未分组'; form.feed_type = 'rss'; form.css_selector = ''
     await loadData()
   } catch (e) {
     ElMessage.error(e.response?.data?.message || '操作失败')
@@ -127,9 +145,7 @@ onMounted(loadData)
 
 <style scoped>
 .manage-page {
-  background: #fff;
-  border-radius: 8px;
-  padding: 20px;
+  padding: 20px 24px;
 }
 
 .manage-header {
@@ -143,5 +159,13 @@ onMounted(loadData)
   flex: 1;
   margin: 0;
   font-size: 16px;
+  color: var(--text-primary);
+}
+
+.form-tip {
+  font-size: 12px;
+  color: var(--text-secondary, #909399);
+  line-height: 1.4;
+  margin-top: 4px;
 }
 </style>

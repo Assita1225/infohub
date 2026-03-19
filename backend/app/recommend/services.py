@@ -51,13 +51,25 @@ def get_tags():
     }
 
 
-def update_selected_tags(selected: list[str]):
-    """更新用户选中的标签"""
+def update_selected_tags(selected: list):
+    """更新用户选中的标签（带权重）
+    selected: [{"name": "标签名", "weight": 0.5}, ...]
+    """
+    # 兼容旧格式：如果传入的是纯字符串数组，自动转换
+    normalized = []
+    for item in selected:
+        if isinstance(item, str):
+            normalized.append({"name": item, "weight": 0.5})
+        elif isinstance(item, dict) and "name" in item:
+            weight = item.get("weight", 0.5)
+            weight = max(0.1, min(1.0, float(weight)))
+            normalized.append({"name": item["name"], "weight": weight})
+
     mongo.db.user_tags.update_one(
         {"_id": "user_tags"},
         {
             "$set": {
-                "selected_tags": selected,
+                "selected_tags": normalized,
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }
         },
@@ -94,7 +106,10 @@ def delete_custom_tag(tag: str):
     mongo.db.user_tags.update_one(
         {"_id": "user_tags"},
         {
-            "$pull": {"custom_tags": tag, "selected_tags": tag},
+            "$pull": {
+                "custom_tags": tag,
+                "selected_tags": {"name": tag},
+            },
             "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
         },
     )
@@ -130,18 +145,45 @@ def _find_matched_keywords(item: dict, keywords: list[str]) -> list[str]:
     return matched
 
 
-def get_feed(tags: list[str], limit: int = 20):
-    """根据选中标签从 trending_items 中模糊匹配推荐内容，按热度降序"""
-    if not tags:
+def get_feed(tags_with_weights: list[dict], limit: int = 20):
+    """根据选中标签（带权重）从 trending_items 中模糊匹配推荐内容。
+    tags_with_weights: [{"name": "人工智能", "weight": 0.8}, ...]
+    排序公式：hot_score × max(matched_tag_weight)
+    """
+    if not tags_with_weights:
         return {"items": [], "hint": "请选择兴趣标签以获取个性化推荐"}
 
-    keywords = _expand_keywords(tags)
+    # 兼容旧格式
+    normalized = []
+    for t in tags_with_weights:
+        if isinstance(t, str):
+            normalized.append({"name": t, "weight": 0.5})
+        else:
+            normalized.append(t)
+
+    tag_names = [t["name"] for t in normalized]
+    # 构建 tag_name → weight 映射
+    tag_weight_map = {t["name"]: t.get("weight", 0.5) for t in normalized}
+
+    # 构建 keyword → weight 映射（同义词继承父标签权重）
+    keyword_weight_map = {}
+    all_keywords = []
+    for tag_name in tag_names:
+        weight = tag_weight_map.get(tag_name, 0.5)
+        synonyms = TAG_SYNONYMS.get(tag_name)
+        if synonyms:
+            for s in synonyms:
+                all_keywords.append(s)
+                # 取最大权重（一个关键词可能属于多个标签）
+                keyword_weight_map[s] = max(keyword_weight_map.get(s, 0), weight)
+        else:
+            all_keywords.append(tag_name)
+            keyword_weight_map[tag_name] = max(keyword_weight_map.get(tag_name, 0), weight)
+
+    keywords = list(dict.fromkeys(all_keywords))  # 去重保序
     since = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
 
-    # 构建正则：在 title 中匹配任意关键词（不区分大小写）
     regex_pattern = "|".join(re.escape(kw) for kw in keywords)
-    # 同时也做 tags 精确匹配（不区分大小写的 $in）
-    keywords_lower = [kw.lower() for kw in keywords]
 
     matches = list(
         mongo.db.trending_items.find(
@@ -155,7 +197,7 @@ def get_feed(tags: list[str], limit: int = 20):
             {"_id": 0, "title": 1, "url": 1, "hot_score": 1, "source": 1, "tags": 1},
         )
         .sort("hot_score", -1)
-        .limit(limit)
+        .limit(limit * 3)  # 多取一些，排序后再截断
     )
 
     if not matches:
@@ -165,15 +207,31 @@ def get_feed(tags: list[str], limit: int = 20):
     for item in matches:
         source_key = item.get("source", "")
         matched_kws = _find_matched_keywords(item, keywords)
+
+        # 计算该条目匹配到的最大权重
+        max_weight = 0.1
+        for kw in matched_kws:
+            w = keyword_weight_map.get(kw, 0.1)
+            if w > max_weight:
+                max_weight = w
+
+        hot_score = item.get("hot_score", 0) or 0
+        weighted_score = hot_score * max_weight
+
         results.append({
             "title": item["title"],
             "url": item["url"],
             "source": source_key,
             "source_label": _SOURCE_LABELS.get(source_key, source_key),
-            "hot_score": item.get("hot_score", 0),
+            "hot_score": hot_score,
+            "weighted_score": round(weighted_score, 2),
             "tags": item.get("tags", []),
             "matched_keywords": matched_kws,
         })
+
+    # 按加权分数降序排列
+    results.sort(key=lambda x: x["weighted_score"], reverse=True)
+    results = results[:limit]
 
     hint = ""
     if len(results) < 3:

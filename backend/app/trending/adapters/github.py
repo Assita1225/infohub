@@ -4,6 +4,7 @@ import logging
 import requests
 from bs4 import BeautifulSoup
 
+from app.common.http_client import http_get
 from .base import TrendingAdapter
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ class GitHubTrendingAdapter(TrendingAdapter):
     source_name = "github"
 
     def fetch(self) -> list[dict]:
-        resp = requests.get(
+        resp = http_get(
             "https://github.com/trending",
             headers=HEADERS,
             timeout=15,

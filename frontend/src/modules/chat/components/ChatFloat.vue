@@ -9,113 +9,113 @@
   </div>
 
   <!-- 对话面板 -->
-  <div v-show="chatStore.isPanelOpen" class="chat-panel">
-    <!-- 顶部栏 -->
-    <div class="chat-header">
-      <div class="chat-header-left">
-        <span class="chat-context-label">{{ contextLabel }}</span>
-      </div>
-      <div class="chat-header-actions">
-        <el-tooltip content="历史会话" placement="top">
-          <el-icon class="header-btn" @click="showSessions = !showSessions">
-            <Clock />
+  <transition name="chat-slide">
+    <div v-show="chatStore.isPanelOpen" class="chat-panel">
+      <!-- 顶部栏 -->
+      <div class="chat-header">
+        <div class="chat-header-left">
+          <span class="chat-context-label">{{ contextLabel }}</span>
+        </div>
+        <div class="chat-header-actions">
+          <el-tooltip content="历史会话" placement="top">
+            <el-icon class="header-btn" @click="showSessions = !showSessions">
+              <Clock />
+            </el-icon>
+          </el-tooltip>
+          <el-tooltip content="新建对话" placement="top">
+            <el-icon class="header-btn" @click="handleNewSession">
+              <Plus />
+            </el-icon>
+          </el-tooltip>
+          <el-icon class="header-btn" @click="chatStore.togglePanel">
+            <Close />
           </el-icon>
-        </el-tooltip>
-        <el-tooltip content="新建对话" placement="top">
-          <el-icon class="header-btn" @click="handleNewSession">
-            <Plus />
+        </div>
+      </div>
+
+      <!-- 会话列表（可折叠） -->
+      <div v-if="showSessions" class="session-list">
+        <div
+          v-for="session in chatStore.sessions"
+          :key="session._id"
+          class="session-item"
+          :class="{ active: session._id === chatStore.currentSessionId }"
+          @click="handleSwitchSession(session._id)"
+        >
+          <div class="session-info">
+            <span class="session-title">{{ session.title }}</span>
+            <span class="session-date">{{ formatDate(session.updated_at) }}</span>
+          </div>
+          <el-icon
+            class="session-delete"
+            @click.stop="chatStore.removeSession(session._id)"
+          >
+            <Delete />
           </el-icon>
-        </el-tooltip>
-        <el-icon class="header-btn" @click="chatStore.togglePanel">
-          <Close />
-        </el-icon>
-      </div>
-    </div>
-
-    <!-- 会话列表（可折叠） -->
-    <div v-if="showSessions" class="session-list">
-      <div
-        v-for="session in chatStore.sessions"
-        :key="session._id"
-        class="session-item"
-        :class="{ active: session._id === chatStore.currentSessionId }"
-        @click="handleSwitchSession(session._id)"
-      >
-        <div class="session-info">
-          <span class="session-title">{{ session.title }}</span>
-          <span class="session-date">{{ formatDate(session.updated_at) }}</span>
         </div>
-        <el-icon
-          class="session-delete"
-          @click.stop="chatStore.removeSession(session._id)"
+        <div v-if="chatStore.sessions.length === 0" class="session-empty">
+          暂无历史会话
+        </div>
+      </div>
+
+      <!-- 消息区域 -->
+      <div ref="messageListRef" class="message-list">
+        <!-- 预设建议（无消息时显示） -->
+        <div v-if="chatStore.messages.length === 0" class="preset-suggestions">
+          <p class="preset-hint">你可以试试问我：</p>
+          <button
+            v-for="(q, i) in presetQuestions"
+            :key="i"
+            class="preset-btn"
+            @click="handlePreset(q)"
+          >
+            {{ q }}
+          </button>
+        </div>
+
+        <!-- 消息列表 -->
+        <div
+          v-for="(msg, idx) in chatStore.messages"
+          :key="idx"
+          class="message-row"
+          :class="msg.role"
         >
-          <Delete />
-        </el-icon>
-      </div>
-      <div v-if="chatStore.sessions.length === 0" class="session-empty">
-        暂无历史会话
-      </div>
-    </div>
+          <div class="message-bubble" :class="msg.role">
+            <div v-if="msg.role === 'assistant'" class="assistant-content" v-html="renderMarkdown(msg.content)"></div>
+            <div v-else class="user-content">{{ msg.content }}</div>
+          </div>
+        </div>
 
-    <!-- 消息区域 -->
-    <div ref="messageListRef" class="message-list">
-      <!-- 预设建议（无消息时显示） -->
-      <div v-if="chatStore.messages.length === 0" class="preset-suggestions">
-        <p class="preset-hint">你可以试试问我：</p>
-        <el-tag
-          v-for="(q, i) in presetQuestions"
-          :key="i"
-          class="preset-tag"
-          effect="plain"
-          round
-          @click="handlePreset(q)"
-        >
-          {{ q }}
-        </el-tag>
-      </div>
-
-      <!-- 消息列表 -->
-      <div
-        v-for="(msg, idx) in chatStore.messages"
-        :key="idx"
-        class="message-row"
-        :class="msg.role"
-      >
-        <div class="message-bubble" :class="msg.role">
-          <div v-if="msg.role === 'assistant'" class="assistant-content" v-html="renderMarkdown(msg.content)"></div>
-          <div v-else class="user-content">{{ msg.content }}</div>
+        <!-- 流式加载指示 -->
+        <div v-if="chatStore.isStreaming && lastAssistantContent === ''" class="message-row assistant">
+          <div class="message-bubble assistant">
+            <span class="typing-indicator">思考中...</span>
+          </div>
         </div>
       </div>
 
-      <!-- 流式加载指示 -->
-      <div v-if="chatStore.isStreaming && lastAssistantContent === ''" class="message-row assistant">
-        <div class="message-bubble assistant">
-          <span class="typing-indicator">思考中...</span>
-        </div>
+      <!-- 输入区 -->
+      <div class="chat-input-area">
+        <el-input
+          v-model="inputText"
+          type="textarea"
+          :autosize="{ minRows: 1, maxRows: 3 }"
+          placeholder="输入消息..."
+          :disabled="chatStore.isStreaming"
+          @keydown="handleKeydown"
+        />
+        <el-button
+          type="primary"
+          :icon="Promotion"
+          circle
+          size="small"
+          :disabled="!inputText.trim() || chatStore.isStreaming"
+          :loading="chatStore.isStreaming"
+          @click="handleSend"
+        />
       </div>
     </div>
-
-    <!-- 输入区 -->
-    <div class="chat-input-area">
-      <el-input
-        v-model="inputText"
-        type="textarea"
-        :autosize="{ minRows: 1, maxRows: 3 }"
-        placeholder="输入消息..."
-        :disabled="chatStore.isStreaming"
-        @keydown="handleKeydown"
-      />
-      <el-button
-        type="primary"
-        :icon="Promotion"
-        circle
-        size="small"
-        :disabled="!inputText.trim() || chatStore.isStreaming"
-        :loading="chatStore.isStreaming"
-        @click="handleSend"
-      />
-    </div>
-  </div>
+  </transition>
 </template>
 
 <script setup>
@@ -141,7 +141,7 @@ const messageListRef = ref(null)
 const contextLabel = computed(() => {
   const ctx = chatStore.currentContext
   if (ctx.article_title) {
-    return `当前关联：《${ctx.article_title}》`
+    return `关联：《${ctx.article_title}》`
   }
   const pageLabels = {
     rss: 'RSS 订阅',
@@ -250,7 +250,6 @@ function formatDate(dateStr) {
 
 function renderMarkdown(text) {
   if (!text) return ''
-  // 简易 markdown：粗体、行内代码、换行
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -282,22 +281,33 @@ watch(
   position: fixed;
   right: 24px;
   bottom: 24px;
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  background: #409eff;
+  background: var(--accent);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px rgba(196, 90, 60, 0.3);
   z-index: 9999;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .chat-fab:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(196, 90, 60, 0.4);
+}
+
+/* ── 面板滑入动画 ── */
+.chat-slide-enter-active,
+.chat-slide-leave-active {
+  transition: opacity 0.2s, transform 0.2s;
+}
+.chat-slide-enter-from,
+.chat-slide-leave-to {
+  opacity: 0;
+  transform: translateY(16px);
 }
 
 /* ── 对话面板 ── */
@@ -305,15 +315,16 @@ watch(
   position: fixed;
   right: 24px;
   bottom: 24px;
-  width: 400px;
+  width: 380px;
   height: 560px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
   z-index: 9999;
   overflow: hidden;
+  border: 1px solid var(--border-light);
 }
 
 /* ── 顶部栏 ── */
@@ -322,13 +333,13 @@ watch(
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 1px solid #e4e7ed;
-  background: #f5f7fa;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-primary);
   flex-shrink: 0;
 }
 .chat-context-label {
   font-size: 13px;
-  color: #606266;
+  color: var(--text-secondary);
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -342,19 +353,19 @@ watch(
 }
 .header-btn {
   font-size: 18px;
-  color: #909399;
+  color: var(--text-muted);
   cursor: pointer;
   transition: color 0.2s;
 }
 .header-btn:hover {
-  color: #409eff;
+  color: var(--accent);
 }
 
 /* ── 会话列表 ── */
 .session-list {
   max-height: 200px;
   overflow-y: auto;
-  border-bottom: 1px solid #e4e7ed;
+  border-bottom: 1px solid var(--border-light);
   flex-shrink: 0;
 }
 .session-item {
@@ -366,10 +377,10 @@ watch(
   transition: background 0.15s;
 }
 .session-item:hover {
-  background: #f5f7fa;
+  background: var(--bg-hover);
 }
 .session-item.active {
-  background: #ecf5ff;
+  background: var(--accent-light);
 }
 .session-info {
   flex: 1;
@@ -377,7 +388,7 @@ watch(
 }
 .session-title {
   font-size: 13px;
-  color: #303133;
+  color: var(--text-primary);
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -385,11 +396,11 @@ watch(
 }
 .session-date {
   font-size: 11px;
-  color: #c0c4cc;
+  color: var(--text-muted);
 }
 .session-delete {
   font-size: 14px;
-  color: #c0c4cc;
+  color: var(--text-muted);
   cursor: pointer;
   flex-shrink: 0;
   margin-left: 8px;
@@ -400,7 +411,7 @@ watch(
 .session-empty {
   padding: 16px;
   text-align: center;
-  color: #c0c4cc;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
@@ -418,16 +429,24 @@ watch(
 }
 .preset-hint {
   font-size: 13px;
-  color: #909399;
+  color: var(--text-muted);
   margin-bottom: 12px;
 }
-.preset-tag {
+.preset-btn {
+  display: inline-block;
   margin: 4px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 12px;
   cursor: pointer;
+  transition: all 0.15s;
 }
-.preset-tag:hover {
-  color: #409eff;
-  border-color: #409eff;
+.preset-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* 消息行 */
@@ -444,32 +463,32 @@ watch(
 
 .message-bubble {
   max-width: 85%;
-  padding: 8px 12px;
-  border-radius: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
   font-size: 13px;
   line-height: 1.6;
   word-break: break-word;
 }
 .message-bubble.user {
-  background: #409eff;
-  color: #fff;
+  background: var(--accent-light);
+  color: var(--text-primary);
   border-bottom-right-radius: 2px;
 }
 .message-bubble.assistant {
-  background: #f4f4f5;
-  color: #303133;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
   border-bottom-left-radius: 2px;
 }
 
 .assistant-content :deep(code) {
-  background: #e8e8e8;
+  background: var(--bg-hover);
   padding: 1px 4px;
   border-radius: 3px;
   font-size: 12px;
 }
 
 .typing-indicator {
-  color: #909399;
+  color: var(--text-muted);
   font-style: italic;
 }
 
@@ -479,8 +498,8 @@ watch(
   align-items: flex-end;
   gap: 8px;
   padding: 12px 16px;
-  border-top: 1px solid #e4e7ed;
-  background: #fff;
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-card);
   flex-shrink: 0;
 }
 .chat-input-area :deep(.el-textarea__inner) {

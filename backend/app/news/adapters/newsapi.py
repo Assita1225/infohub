@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 import requests
 
+from app.common.http_client import http_get
 from .base import NewsAdapter
 
 logger = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ class NewsApiAdapter(NewsAdapter):
             params["category"] = category
 
         try:
-            resp = requests.get(self.BASE_URL, params=params, timeout=30)
+            resp = http_get(self.BASE_URL, params=params, timeout=30)
             resp.raise_for_status()
             data = resp.json()
         except Exception as e:

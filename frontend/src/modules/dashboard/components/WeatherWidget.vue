@@ -9,7 +9,7 @@
     <template v-else-if="weather">
       <div class="weather-main">
         <span class="weather-icon">{{ weatherIcon }}</span>
-        <span class="weather-temp">{{ weather.temperature }}°C</span>
+        <span class="weather-temp">{{ weather.temperature }}°</span>
       </div>
       <div class="weather-desc">{{ weatherDesc }}</div>
       <div class="weather-range" v-if="weather.tempMax != null">
@@ -72,7 +72,6 @@ const weatherDesc = ref('')
 const showCityDialog = ref(false)
 const cityInput = ref('')
 
-// 城市坐标缓存
 let cityLat = 0
 let cityLon = 0
 
@@ -80,11 +79,9 @@ async function init() {
   loading.value = true
   weather.value = null
   try {
-    // 1. 从后端获取城市名
     const cityRes = await getWeatherCity()
     cityName.value = cityRes.data.city
 
-    // 2. 城市名 → 经纬度
     const geo = await geocode(cityName.value)
     if (!geo) {
       loading.value = false
@@ -93,7 +90,6 @@ async function init() {
     cityLat = geo.lat
     cityLon = geo.lon
 
-    // 3. 获取天气
     await fetchWeather()
   } catch {
     weather.value = null
@@ -133,7 +129,6 @@ async function fetchWeather() {
   }
 }
 
-// 搜索城市（autocomplete）
 async function searchCity(query, cb) {
   if (!query || query.length < 1) { cb([]); return }
   try {
@@ -155,9 +150,7 @@ async function handleCitySelect(item) {
   cityName.value = item.name
   cityLat = item.lat
   cityLon = item.lon
-  // 保存到后端
   try { await saveWeatherCity(item.name) } catch { /* 静默 */ }
-  // 刷新天气
   loading.value = true
   try { await fetchWeather() } catch { weather.value = null }
   loading.value = false
@@ -179,7 +172,7 @@ onMounted(init)
 }
 
 .weather-loading {
-  color: #c0c4cc;
+  color: var(--text-muted);
 }
 
 .weather-main {
@@ -189,31 +182,32 @@ onMounted(init)
 }
 
 .weather-icon {
-  font-size: 32px;
+  font-size: 36px;
   line-height: 1;
 }
 
 .weather-temp {
-  font-size: 28px;
+  font-family: var(--font-display);
+  font-size: 36px;
   font-weight: 700;
-  color: #303133;
+  color: var(--text-primary);
 }
 
 .weather-desc {
   font-size: 13px;
-  color: #606266;
+  color: var(--text-secondary);
   margin-top: 4px;
 }
 
 .weather-range {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-muted);
   margin-top: 2px;
 }
 
 .weather-city {
   font-size: 12px;
-  color: #409eff;
+  color: var(--accent);
   margin-top: 6px;
   cursor: pointer;
   display: flex;
@@ -222,7 +216,7 @@ onMounted(init)
 }
 
 .weather-city:hover {
-  text-decoration: underline;
+  color: var(--accent-hover);
 }
 
 .weather-error {

@@ -3,21 +3,20 @@
     <!-- 顶部操作栏 -->
     <div class="news-header">
       <div class="category-tabs">
-        <el-radio-group v-model="activeCategory" size="default" @change="onCategoryChange">
-          <el-radio-button label="">全部</el-radio-button>
-          <el-radio-button
-            v-for="cat in categories"
-            :key="cat.key"
-            :label="cat.key"
-          >
-            {{ cat.name }}
-            <el-badge v-if="cat.count" :value="cat.count" :max="999" class="cat-badge" />
-          </el-radio-button>
-        </el-radio-group>
+        <button
+          :class="['pill-btn', { active: activeCategory === '' }]"
+          @click="activeCategory = ''; onCategoryChange()"
+        >全部</button>
+        <button
+          v-for="cat in categories"
+          :key="cat.key"
+          :class="['pill-btn', { active: activeCategory === cat.key }]"
+          @click="activeCategory = cat.key; onCategoryChange()"
+        >{{ cat.name }}</button>
       </div>
       <div class="header-actions">
         <el-button @click="$router.push('/news/read-later')">
-          <el-icon><Clock /></el-icon> 稍后读
+          <el-icon><Collection /></el-icon> 稍后读
         </el-button>
         <el-button type="primary" :loading="refreshing" @click="handleRefresh">
           <el-icon><Refresh /></el-icon> 刷新新闻
@@ -27,13 +26,16 @@
 
     <!-- 文章卡片流 -->
     <div v-loading="loading" class="news-list">
-      <el-empty v-if="!loading && articles.length === 0" description="暂无新闻，点击刷新获取最新内容" />
+      <div v-if="!loading && articles.length === 0" class="empty-state">
+        <el-icon :size="48" color="var(--text-muted)"><Paperclip /></el-icon>
+        <p>暂无新闻，点击刷新获取最新内容</p>
+      </div>
 
       <div v-else class="card-grid">
         <div
           v-for="article in articles"
           :key="article._id"
-          class="news-card"
+          class="news-card card"
           @click="goArticle(article._id)"
         >
           <div class="card-body">
@@ -45,14 +47,14 @@
             <span class="card-source">{{ article.author || '未知来源' }}</span>
             <span class="card-time">{{ formatTime(article.published_at) }}</span>
             <div class="card-actions" @click.stop>
-              <el-button
-                text
-                size="small"
-                :type="article.is_read_later ? 'warning' : ''"
-                @click="toggleReadLater(article)"
-              >
-                <el-icon><Clock /></el-icon>
-              </el-button>
+              <el-tooltip :content="article.is_read_later ? '已收藏' : '稍后读'" placement="top">
+                <button
+                  :class="['bookmark-btn', { saved: article.is_read_later }]"
+                  @click="toggleReadLater(article)"
+                >
+                  <el-icon><Collection /></el-icon>
+                </button>
+              </el-tooltip>
             </div>
           </div>
         </div>
@@ -75,7 +77,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Clock, Refresh } from '@element-plus/icons-vue'
+import { Collection, Refresh, Paperclip } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import {
   getCategories,
@@ -179,33 +181,50 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.news-page {
-  padding: 0;
+/* 胶囊标签 */
+.category-tabs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pill-btn {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.pill-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.pill-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
 }
 
 .news-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 20px;
   flex-wrap: wrap;
   gap: 12px;
-}
-
-.category-tabs {
-  flex: 1;
-  min-width: 0;
-  overflow-x: auto;
 }
 
 .header-actions {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
-}
-
-.cat-badge {
-  margin-left: 4px;
 }
 
 .card-grid {
@@ -215,25 +234,17 @@ onMounted(() => {
 }
 
 .news-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 16px;
   cursor: pointer;
-  transition: box-shadow 0.2s;
-  border: 1px solid #e4e7ed;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-}
-
-.news-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 20px 24px;
 }
 
 .card-title {
   font-size: 15px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-primary);
   line-height: 1.5;
   margin: 0 0 8px;
   display: -webkit-box;
@@ -244,11 +255,11 @@ onMounted(() => {
 
 .card-summary {
   font-size: 13px;
-  color: #606266;
+  color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -259,7 +270,7 @@ onMounted(() => {
   gap: 12px;
   margin-top: 12px;
   font-size: 12px;
-  color: #909399;
+  color: var(--text-muted);
 }
 
 .card-source {
@@ -271,6 +282,30 @@ onMounted(() => {
 
 .card-actions {
   margin-left: auto;
+}
+
+.bookmark-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 4px;
+  transition: color 0.15s;
+}
+.bookmark-btn:hover,
+.bookmark-btn.saved {
+  color: var(--accent);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  gap: 12px;
 }
 
 .pagination {

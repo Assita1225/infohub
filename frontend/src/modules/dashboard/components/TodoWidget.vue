@@ -5,7 +5,6 @@
       <span class="todo-count">{{ remaining }} 项待完成</span>
     </div>
 
-    <!-- 输入框 -->
     <div class="todo-input">
       <el-input
         v-model="newTitle"
@@ -19,7 +18,6 @@
       </el-input>
     </div>
 
-    <!-- 列表 -->
     <div class="todo-list">
       <div
         v-for="item in todos"
@@ -41,14 +39,17 @@
           <el-icon><Delete /></el-icon>
         </el-button>
       </div>
-      <div v-if="todos.length === 0" class="todo-empty">暂无待办</div>
+      <div v-if="todos.length === 0" class="todo-empty">
+        <el-icon :size="24" color="var(--text-muted)"><Finished /></el-icon>
+        <span>暂无待办</span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { Plus, Delete } from '@element-plus/icons-vue'
+import { Plus, Delete, Finished } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getTodos, createTodo, updateTodo, deleteTodo } from '../api'
 
@@ -115,12 +116,12 @@ onMounted(loadTodos)
 .todo-title {
   font-size: 14px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-primary);
 }
 
 .todo-count {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-muted);
 }
 
 .todo-input {
@@ -136,19 +137,19 @@ onMounted(loadTodos)
   display: flex;
   align-items: center;
   padding: 6px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .todo-item.completed .todo-text {
   text-decoration: line-through;
-  color: #c0c4cc;
+  color: var(--text-muted);
 }
 
 .todo-text {
   flex: 1;
   font-size: 13px;
   margin-left: 8px;
-  color: #303133;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -164,8 +165,11 @@ onMounted(loadTodos)
 }
 
 .todo-empty {
-  text-align: center;
-  color: #c0c4cc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
   font-size: 13px;
   padding: 20px 0;
 }

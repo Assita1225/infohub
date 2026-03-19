@@ -5,6 +5,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
+from app.common.http_client import http_get
 from .base import TrendingAdapter
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ class BaiduTrendingAdapter(TrendingAdapter):
     source_name = "baidu"
 
     def fetch(self) -> list[dict]:
-        resp = requests.get(
+        resp = http_get(
             "https://top.baidu.com/board?tab=realtime",
             headers=HEADERS,
             timeout=15,

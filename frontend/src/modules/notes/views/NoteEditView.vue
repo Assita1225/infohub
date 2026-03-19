@@ -1,5 +1,5 @@
 <template>
-  <div class="note-edit-page">
+  <div class="note-edit-page card">
     <!-- 顶部操作栏 -->
     <div class="edit-toolbar">
       <el-button @click="$router.push('/notes')">
@@ -44,6 +44,8 @@
         closable
         @close="removeTag(tag)"
         size="default"
+        effect="plain"
+        round
       >
         {{ tag }}
       </el-tag>
@@ -86,18 +88,15 @@ import { getNote, createNote, updateNote, deleteNote } from '../api'
 const route = useRoute()
 const router = useRouter()
 
-// 笔记数据
 const noteId = ref(route.params.id || null)
 const title = ref('')
 const content = ref('')
 const tags = ref([])
 const source = ref({ type: 'manual', article_id: null, article_url: '', selected_text: '' })
 
-// 状态
 const saving = ref(false)
 const lastSaved = ref(false)
 
-// 标签输入
 const showTagInput = ref(false)
 const newTag = ref('')
 const tagInputRef = ref(null)
@@ -115,7 +114,6 @@ function removeTag(tag) {
   tags.value = tags.value.filter(t => t !== tag)
 }
 
-// 加载已有笔记
 async function loadNote() {
   if (!noteId.value) return
   try {
@@ -131,7 +129,6 @@ async function loadNote() {
   }
 }
 
-// 从文章页过来的参数预填
 function prefillFromQuery() {
   const q = route.query
   if (q.source_type) {
@@ -145,15 +142,12 @@ function prefillFromQuery() {
   if (q.title) {
     title.value = q.title
   }
-  // 如果有选中文本，作为初始内容
   if (q.selected_text) {
     content.value = `> ${q.selected_text}\n\n`
   }
-  // 如果有文章摘要，附加到内容中
   if (q.summary) {
     content.value += `**AI 摘要：**\n${q.summary}\n\n`
   }
-  // 来源链接
   if (q.article_url) {
     content.value += `[原文链接](${q.article_url})\n\n`
   }
@@ -177,7 +171,6 @@ async function handleSave() {
     } else {
       const res = await createNote(data)
       noteId.value = res.data._id
-      // 替换 URL 但不重新加载
       router.replace(`/notes/${noteId.value}`)
     }
     lastSaved.value = true
@@ -213,10 +206,8 @@ onMounted(() => {
 .note-edit-page {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 100px);
-  background: #fff;
-  border-radius: 8px;
-  padding: 20px;
+  height: calc(100vh - 120px);
+  padding: 20px 24px;
 }
 
 .edit-toolbar {
@@ -234,24 +225,24 @@ onMounted(() => {
 
 .save-hint {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-muted);
 }
 
 .source-banner {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #ecf5ff;
-  border-radius: 4px;
+  background: var(--accent-light);
+  border-radius: var(--radius-sm);
   padding: 8px 12px;
   margin-bottom: 12px;
   font-size: 13px;
-  color: #409eff;
+  color: var(--accent);
 }
 
 .source-link {
   margin-left: auto;
-  color: #409eff;
+  color: var(--accent);
   text-decoration: none;
 }
 
@@ -280,5 +271,6 @@ onMounted(() => {
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  border-radius: var(--radius-md);
 }
 </style>

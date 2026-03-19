@@ -3,6 +3,7 @@ import logging
 
 import feedparser
 
+from app.common.http_client import parse_feed
 from .base import TrendingAdapter
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ class GoogleTrendsAdapter(TrendingAdapter):
 
         for feed_url in FEED_URLS:
             try:
-                feed = feedparser.parse(feed_url)
+                feed = parse_feed(feed_url)
                 for entry in feed.entries:
                     title = entry.get("title", "").strip()
                     if not title or title in seen:

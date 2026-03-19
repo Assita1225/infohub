@@ -53,9 +53,26 @@ def tag_delete(tag):
 @recommend_bp.route('/feed', methods=['GET'])
 @login_required
 def feed():
-    """获取推荐内容（?tags=人工智能,前端）"""
+    """获取推荐内容（?tags=人工智能:0.8,前端开发:0.6）
+    支持带权重的标签格式 tag:weight，不带权重则默认 0.5
+    """
     tags_param = request.args.get('tags', '')
-    tags = [t.strip() for t in tags_param.split(',') if t.strip()]
     limit = request.args.get('limit', 20, type=int)
-    data = get_feed(tags, limit)
+
+    tags_with_weights = []
+    for part in tags_param.split(','):
+        part = part.strip()
+        if not part:
+            continue
+        if ':' in part:
+            name, w = part.rsplit(':', 1)
+            try:
+                weight = float(w)
+            except ValueError:
+                weight = 0.5
+            tags_with_weights.append({"name": name.strip(), "weight": weight})
+        else:
+            tags_with_weights.append({"name": part, "weight": 0.5})
+
+    data = get_feed(tags_with_weights, limit)
     return success(data)

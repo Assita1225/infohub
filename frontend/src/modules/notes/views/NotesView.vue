@@ -35,32 +35,40 @@
     </div>
 
     <!-- 笔记卡片列表 -->
-    <div class="notes-grid" v-loading="loading">
+    <div class="notes-list" v-loading="loading">
       <div
         v-for="note in notes"
         :key="note._id"
-        class="note-card"
+        class="note-item card"
         @click="!showTrash && $router.push(`/notes/${note._id}`)"
       >
-        <div class="note-card-header">
-          <h3 class="note-title">{{ note.title || '无标题' }}</h3>
-          <el-tag v-if="note.source && note.source.type !== 'manual'" size="small" type="info">
-            {{ note.source.type === 'rss' ? 'RSS' : '新闻' }}
-          </el-tag>
-        </div>
-        <p class="note-preview">{{ stripMarkdown(note.content) }}</p>
-        <div class="note-footer">
-          <div class="note-tags">
-            <el-tag v-for="tag in note.tags" :key="tag" size="small" effect="plain">{{ tag }}</el-tag>
+        <div class="note-accent-bar" />
+        <div class="note-body">
+          <div class="note-card-header">
+            <h3 class="note-title">{{ note.title || '无标题' }}</h3>
+            <el-tag v-if="note.source && note.source.type !== 'manual'" size="small" effect="plain" round>
+              {{ note.source.type === 'rss' ? 'RSS' : '新闻' }}
+            </el-tag>
           </div>
-          <span class="note-time">{{ formatTime(showTrash ? note.deleted_at : note.updated_at) }}</span>
-        </div>
-        <!-- 回收站操作 -->
-        <div v-if="showTrash" class="trash-actions">
-          <el-button type="primary" size="small" @click.stop="handleRestore(note._id)">恢复</el-button>
+          <p class="note-preview">{{ stripMarkdown(note.content) }}</p>
+          <div class="note-footer">
+            <div class="note-tags">
+              <span v-for="tag in note.tags" :key="tag" class="note-tag-pill">{{ tag }}</span>
+            </div>
+            <span class="note-time">{{ formatTime(showTrash ? note.deleted_at : note.updated_at) }}</span>
+          </div>
+          <!-- 回收站操作 -->
+          <div v-if="showTrash" class="trash-actions">
+            <el-button type="primary" size="small" @click.stop="handleRestore(note._id)">恢复</el-button>
+          </div>
         </div>
       </div>
-      <el-empty v-if="!loading && notes.length === 0" :description="showTrash ? '回收站为空' : '暂无笔记'" />
+
+      <div v-if="!loading && notes.length === 0" class="empty-state">
+        <el-icon :size="48" color="var(--text-muted)"><Notebook /></el-icon>
+        <p>{{ showTrash ? '回收站为空' : '暂无笔记，创建一个吧' }}</p>
+        <el-button v-if="!showTrash" type="primary" @click="$router.push('/notes/new')">新建笔记</el-button>
+      </div>
     </div>
 
     <!-- 分页 -->
@@ -78,7 +86,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Search, Plus, Delete, ArrowLeft } from '@element-plus/icons-vue'
+import { Search, Plus, Delete, ArrowLeft, Notebook } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getNotes, getTrashNotes, restoreNote } from '../api'
 
@@ -171,10 +179,6 @@ onMounted(loadNotes)
 </script>
 
 <style scoped>
-.notes-page {
-  padding: 0;
-}
-
 .notes-toolbar {
   display: flex;
   justify-content: space-between;
@@ -195,36 +199,49 @@ onMounted(loadNotes)
   gap: 8px;
 }
 
-.notes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
+/* 笔记列表项 */
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.note-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+.note-item {
+  display: flex;
+  overflow: hidden;
+  padding: 0;
   cursor: pointer;
-  transition: box-shadow 0.2s;
 }
 
-.note-card:hover {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+.note-accent-bar {
+  width: 3px;
+  flex-shrink: 0;
+  background: transparent;
+  transition: background 0.15s;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+
+.note-item:hover .note-accent-bar {
+  background: var(--accent);
+}
+
+.note-body {
+  flex: 1;
+  padding: 16px 20px;
+  min-width: 0;
 }
 
 .note-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .note-title {
   font-size: 15px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-primary);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -234,7 +251,7 @@ onMounted(loadNotes)
 
 .note-preview {
   font-size: 13px;
-  color: #909399;
+  color: var(--text-muted);
   line-height: 1.5;
   margin: 0 0 10px;
   display: -webkit-box;
@@ -255,15 +272,34 @@ onMounted(loadNotes)
   flex-wrap: wrap;
 }
 
+.note-tag-pill {
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
 .note-time {
   font-size: 12px;
-  color: #c0c4cc;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
 .trash-actions {
   margin-top: 10px;
   text-align: right;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  gap: 12px;
 }
 
 .notes-pagination {

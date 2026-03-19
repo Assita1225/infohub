@@ -29,7 +29,9 @@
       "Bash(curl -s -N -X POST http://localhost:5001/api/chat/message -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"\"content\"\": \"\"你好，请简短回复\"\", \"\"context\"\": {\"\"page\"\": \"\"general\"\"}}' --max-time 30)",
       "Bash(npx vue-tsc --noEmit)",
       "Bash(xargs wc -l)",
-      "Bash(npm install echarts echarts-wordcloud)"
+      "Bash(npm install echarts echarts-wordcloud)",
+      "Bash(xargs grep:*)",
+      "Bash(find /e/infohub -path */models.py -type f)"
     ]
   }
 }
