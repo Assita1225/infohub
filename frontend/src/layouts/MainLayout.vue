@@ -1,10 +1,13 @@
 <template>
   <el-container class="main-layout">
+    <!-- 移动端遮罩 -->
+    <div v-if="mobileOpen" class="sidebar-overlay" @click="mobileOpen = false" />
+
     <!-- 侧边栏 -->
-    <aside :class="['sidebar', { collapsed: isCollapsed }]">
+    <aside :class="['sidebar', { collapsed: isCollapsed, 'mobile-open': mobileOpen }]">
       <div class="sidebar-logo" @click="toggleCollapse">
-        <span v-show="!isCollapsed" class="logo-text">InfoHub</span>
-        <span v-show="isCollapsed" class="logo-icon">I</span>
+        <span v-show="!isCollapsed || isMobile" class="logo-text">InfoHub</span>
+        <span v-show="isCollapsed && !isMobile" class="logo-icon">I</span>
       </div>
 
       <nav class="sidebar-nav">
@@ -13,16 +16,25 @@
           :key="item.path"
           :to="item.path"
           :class="['nav-item', { active: activeMenu === item.path }]"
+          @click="onNavClick"
         >
           <el-icon class="nav-icon"><component :is="item.icon" /></el-icon>
-          <span v-show="!isCollapsed" class="nav-label">{{ item.label }}</span>
+          <span v-show="!isCollapsed || isMobile" class="nav-label">{{ item.label }}</span>
         </router-link>
       </nav>
 
       <div class="sidebar-bottom">
         <div :class="['nav-item', 'settings-item']" @click="showSettings = true">
           <el-icon class="nav-icon"><Setting /></el-icon>
-          <span v-show="!isCollapsed" class="nav-label">设置</span>
+          <span v-show="!isCollapsed || isMobile" class="nav-label">设置</span>
+        </div>
+        <!-- 桌面端折叠按钮 -->
+        <div v-if="!isMobile" class="nav-item collapse-btn" @click="toggleCollapse">
+          <el-icon class="nav-icon">
+            <DArrowLeft v-if="!isCollapsed" />
+            <DArrowRight v-else />
+          </el-icon>
+          <span v-show="!isCollapsed" class="nav-label">收起</span>
         </div>
       </div>
     </aside>
@@ -30,7 +42,12 @@
     <!-- 右侧主区域 -->
     <div class="main-wrapper">
       <header class="topbar">
-        <span class="topbar-title">{{ currentTitle }}</span>
+        <div class="topbar-left">
+          <button v-if="isMobile" class="hamburger-btn" @click="mobileOpen = !mobileOpen">
+            <span /><span /><span />
+          </button>
+          <span class="topbar-title">{{ currentTitle }}</span>
+        </div>
         <div class="topbar-right">
           <el-tooltip content="AI 对话" placement="bottom">
             <button class="ai-btn" @click="toggleChat">
@@ -64,14 +81,14 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useChatStore } from '@/stores/chat'
 import ChatFloat from '@/modules/chat/components/ChatFloat.vue'
 import {
-  HomeFilled, Connection, Paperclip, TrendCharts, Notebook,
-  Setting, ChatLineSquare,
+  HomeFilled, DataBoard, Connection, Paperclip, TrendCharts, Notebook, MagicStick,
+  Calendar, WalletFilled, Setting, ChatLineSquare, DArrowLeft, DArrowRight,
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -79,30 +96,57 @@ const router = useRouter()
 const auth = useAuthStore()
 const chat = useChatStore()
 
-const isCollapsed = ref(false)
+const isCollapsed = ref(localStorage.getItem('sidebar-collapsed') === 'true')
 const showSettings = ref(false)
+const isMobile = ref(false)
+const mobileOpen = ref(false)
 
 const menuItems = [
   { path: '/dashboard', label: '中心', icon: HomeFilled },
+  { path: '/overview', label: '全景', icon: DataBoard },
   { path: '/rss', label: '订阅', icon: Connection },
   { path: '/news', label: '广场', icon: Paperclip },
   { path: '/trending', label: '趋势', icon: TrendCharts },
   { path: '/notes', label: '笔记', icon: Notebook },
+  { path: '/tools', label: '工具', icon: MagicStick },
+  { path: '/habits', label: '打卡', icon: Calendar },
+  { path: '/finance', label: '账本', icon: WalletFilled },
 ]
 
 const activeMenu = computed(() => '/' + (route.path.split('/')[1] || 'dashboard'))
 
 const titleMap = {
   '/dashboard': '中心',
+  '/overview': '全景',
   '/rss': '订阅',
   '/news': '广场',
   '/trending': '趋势',
   '/notes': '笔记',
+  '/tools': '工具',
+  '/habits': '打卡',
+  '/finance': '账本',
 }
 const currentTitle = computed(() => titleMap[activeMenu.value] || 'InfoHub')
 
+function checkMobile() {
+  isMobile.value = window.innerWidth < 768
+  if (isMobile.value) mobileOpen.value = false
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+onBeforeUnmount(() => window.removeEventListener('resize', checkMobile))
+
 function toggleCollapse() {
+  if (isMobile.value) return
   isCollapsed.value = !isCollapsed.value
+  localStorage.setItem('sidebar-collapsed', isCollapsed.value)
+}
+
+function onNavClick() {
+  if (isMobile.value) mobileOpen.value = false
 }
 
 function toggleChat() {
@@ -221,13 +265,27 @@ function handleChangePassword() {
   font-size: 14px;
 }
 
-/* 底部设置 */
+/* 底部设置 & 折叠按钮 */
 .sidebar-bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
 }
 .settings-item {
   height: 48px;
+}
+.collapse-btn {
+  height: 44px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* ========== 移动端遮罩 ========== */
+.sidebar-overlay {
+  display: none;
+}
+
+/* ========== 汉堡菜单按钮 ========== */
+.hamburger-btn {
+  display: none;
 }
 
 /* ========== 右侧主区域 ========== */
@@ -249,6 +307,11 @@ function handleChangePassword() {
   background: var(--bg-primary);
   border-bottom: 1px solid var(--border-light);
   flex-shrink: 0;
+}
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 .topbar-title {
   font-family: var(--font-display);
@@ -291,5 +354,62 @@ function handleChangePassword() {
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px 32px;
+}
+
+/* ========== 移动端 ========== */
+@media (max-width: 767px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 240px;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .sidebar.collapsed {
+    width: 240px;
+    transform: translateX(-100%);
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+  }
+
+  .hamburger-btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    width: 32px;
+    height: 32px;
+  }
+  .hamburger-btn span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: var(--text-primary);
+    border-radius: 1px;
+  }
+
+  .topbar {
+    padding: 0 16px;
+  }
+
+  .content-container {
+    padding: 16px;
+  }
 }
 </style>

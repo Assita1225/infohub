@@ -3,7 +3,7 @@
     <div class="lock-card">
       <div class="lock-brand">
         <h1 class="lock-logo">InfoHub</h1>
-        <p class="lock-slogan">你的个人信息中枢</p>
+        <p class="lock-slogan">个人信息中枢</p>
       </div>
       <el-form @submit.prevent="handleUnlock" class="lock-form">
         <el-form-item>

@@ -227,6 +227,89 @@ def article_to_note(article_id):
     return note, None
 
 
+def get_reading_timeline(days=7):
+    """获取最近 N 天已读文章，按日期分组"""
+    from datetime import timedelta
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+
+    pipeline = [
+        {"$match": {
+            "is_read": True,
+            "source_type": "rss",
+            "published_at": {"$gte": cutoff},
+        }},
+        {"$lookup": {
+            "from": "rss_feeds",
+            "localField": "feed_id",
+            "foreignField": "_id",
+            "as": "feed_info",
+        }},
+        {"$unwind": {"path": "$feed_info", "preserveNullAndEmptyArrays": True}},
+        {"$sort": {"published_at": -1}},
+        {"$project": {
+            "_id": {"$toString": "$_id"},
+            "title": 1,
+            "source": {"$ifNull": ["$feed_info.title", "未知来源"]},
+            "published_at": 1,
+            "tags": {"$ifNull": ["$tags", []]},
+            "summary": {"$ifNull": ["$summary", ""]},
+            "url": 1,
+        }},
+    ]
+    articles = list(mongo.db.articles.aggregate(pipeline))
+
+    # 按日期分组
+    from collections import OrderedDict
+    grouped = OrderedDict()
+    for a in articles:
+        date_str = a.get("published_at", "")[:10]  # YYYY-MM-DD
+        if not date_str:
+            continue
+        if date_str not in grouped:
+            grouped[date_str] = []
+        grouped[date_str].append(a)
+
+    result = []
+    for date, items in grouped.items():
+        result.append({"date": date, "count": len(items), "articles": items})
+    return result
+
+
+def get_feeds_health():
+    """获取所有订阅源的健康状态"""
+    feeds = mongo.db.rss_feeds.find(
+        {"is_active": True},
+        {"title": 1, "url": 1, "group": 1, "error_count": 1,
+         "last_error": 1, "last_fetched_at": 1, "created_at": 1},
+    )
+    result = []
+    for f in feeds:
+        error_count = f.get("error_count", 0)
+        if error_count >= 5:
+            status = "danger"
+        elif error_count > 0:
+            status = "warning"
+        else:
+            status = "healthy"
+
+        # 计算成功率（基于 error_count 的近似值）
+        total_fetches = max(1, error_count + 1)  # 近似
+        success_rate = round((1 - error_count / max(total_fetches, 1)) * 100, 1) if error_count > 0 else 100.0
+
+        result.append({
+            "_id": str(f["_id"]),
+            "title": f.get("title", ""),
+            "url": f.get("url", ""),
+            "group": f.get("group", ""),
+            "error_count": error_count,
+            "last_error": f.get("last_error"),
+            "last_fetched_at": f.get("last_fetched_at"),
+            "status": status,
+            "success_rate": success_rate,
+        })
+    return result
+
+
 def get_rss_stats():
     """各分组文章数统计"""
     pipeline = [

@@ -3,7 +3,7 @@
     <div class="setup-card">
       <div class="setup-brand">
         <h1 class="setup-logo">InfoHub</h1>
-        <p class="setup-slogan">你的个人信息中枢</p>
+        <p class="setup-slogan">个人信息中枢</p>
       </div>
       <p class="setup-hint">首次使用，请设置一个访问密码</p>
       <el-form @submit.prevent="handleSetup" class="setup-form">

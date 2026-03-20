@@ -33,6 +33,9 @@ def create_app(config_name=None):
     from .dashboard import dashboard_bp
     app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
 
+    from .overview import overview_bp
+    app.register_blueprint(overview_bp, url_prefix='/api/overview')
+
     from .rss import rss_bp
     app.register_blueprint(rss_bp, url_prefix='/api/rss')
 
@@ -51,10 +54,21 @@ def create_app(config_name=None):
     from .recommend import recommend_bp
     app.register_blueprint(recommend_bp, url_prefix='/api/recommend')
 
+    from .tools import tools_bp
+    app.register_blueprint(tools_bp, url_prefix='/api/tools')
+
+    from .habits import habits_bp
+    app.register_blueprint(habits_bp, url_prefix='/api/habits')
+
+    from .finance import finance_bp
+    app.register_blueprint(finance_bp, url_prefix='/api/finance')
+
     # 初始化 MongoDB 索引 + 预设数据
     with app.app_context():
         from .notes.services import ensure_text_index
         ensure_text_index()
+        from .habits.models import ensure_indexes as ensure_habits_indexes
+        ensure_habits_indexes()
         from .chat.models import ensure_indexes as ensure_chat_indexes
         ensure_chat_indexes()
         from .news.models import ensure_indexes as ensure_news_indexes, seed_news_sources
@@ -64,5 +78,7 @@ def create_app(config_name=None):
         ensure_trending_indexes()
         from .recommend.models import seed_user_tags
         seed_user_tags()
+        from .finance.models import ensure_indexes as ensure_finance_indexes
+        ensure_finance_indexes()
 
     return app

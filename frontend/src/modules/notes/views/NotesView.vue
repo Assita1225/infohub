@@ -1,5 +1,6 @@
 <template>
   <div class="notes-page">
+    <p class="page-subtitle">{{ subtitle }}</p>
     <!-- 顶部操作栏 -->
     <div class="notes-toolbar">
       <div class="toolbar-left">
@@ -28,9 +29,17 @@
         <el-button v-else text @click="enterTrash">
           <el-icon><Delete /></el-icon> 回收站
         </el-button>
-        <el-button v-if="!showTrash" type="primary" @click="$router.push('/notes/new')">
-          <el-icon><Plus /></el-icon> 新建笔记
-        </el-button>
+        <template v-if="!showTrash">
+          <el-button v-if="selectMode" :disabled="selectedIds.length === 0" @click="handleBatchExport">
+            导出选中 ({{ selectedIds.length }})
+          </el-button>
+          <el-button @click="selectMode = !selectMode; selectedIds = []">
+            {{ selectMode ? '取消选择' : '批量导出' }}
+          </el-button>
+          <el-button type="primary" @click="$router.push('/notes/new')">
+            <el-icon><Plus /></el-icon> 新建笔记
+          </el-button>
+        </template>
       </div>
     </div>
 
@@ -42,6 +51,13 @@
         class="note-item card"
         @click="!showTrash && $router.push(`/notes/${note._id}`)"
       >
+        <el-checkbox
+          v-if="selectMode && !showTrash"
+          :model-value="selectedIds.includes(note._id)"
+          class="note-checkbox"
+          @click.stop
+          @change="toggleSelect(note._id)"
+        />
         <div class="note-accent-bar" />
         <div class="note-body">
           <div class="note-card-header">
@@ -88,7 +104,9 @@
 import { ref, onMounted } from 'vue'
 import { Search, Plus, Delete, ArrowLeft, Notebook } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { getNotes, getTrashNotes, restoreNote } from '../api'
+import { getNotes, getTrashNotes, restoreNote, exportNotesBatch } from '../api'
+
+const subtitle = ref('记录灵感，沉淀知识')
 
 const loading = ref(false)
 const notes = ref([])
@@ -101,6 +119,8 @@ const filterTag = ref('')
 const sortField = ref('updated_at')
 const allTags = ref([])
 const showTrash = ref(false)
+const selectMode = ref(false)
+const selectedIds = ref([])
 
 async function loadNotes() {
   loading.value = true
@@ -111,6 +131,7 @@ async function loadNotes() {
     const res = await getNotes(params)
     notes.value = res.data.items
     total.value = res.data.total
+    subtitle.value = `你已积累 ${res.data.total} 篇笔记`
     collectTags(res.data.items)
   } catch {
     ElMessage.error('加载笔记失败')
@@ -148,6 +169,32 @@ async function handleRestore(id) {
   }
 }
 
+function toggleSelect(id) {
+  const idx = selectedIds.value.indexOf(id)
+  if (idx >= 0) selectedIds.value.splice(idx, 1)
+  else selectedIds.value.push(id)
+}
+
+async function handleBatchExport() {
+  if (selectedIds.value.length === 0) return
+  try {
+    const res = await exportNotesBatch(selectedIds.value)
+    const url = URL.createObjectURL(res)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'notes_export.zip'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    ElMessage.success('导出成功')
+    selectMode.value = false
+    selectedIds.value = []
+  } catch {
+    ElMessage.error('导出失败')
+  }
+}
+
 function handleSearch() {
   page.value = 1
   loadNotes()
@@ -179,6 +226,12 @@ onMounted(loadNotes)
 </script>
 
 <style scoped>
+.page-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 16px;
+}
+
 .notes-toolbar {
   display: flex;
   justify-content: space-between;
@@ -211,6 +264,11 @@ onMounted(loadNotes)
   overflow: hidden;
   padding: 0;
   cursor: pointer;
+}
+
+.note-checkbox {
+  margin: auto 0;
+  padding: 0 8px 0 14px;
 }
 
 .note-accent-bar {
@@ -306,5 +364,22 @@ onMounted(loadNotes)
   display: flex;
   justify-content: center;
   margin-top: 24px;
+}
+
+@media (max-width: 767px) {
+  .notes-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .toolbar-left {
+    flex-wrap: wrap;
+  }
+  .toolbar-left .el-input,
+  .toolbar-left .el-select {
+    width: 100% !important;
+  }
+  .toolbar-right {
+    justify-content: flex-end;
+  }
 }
 </style>

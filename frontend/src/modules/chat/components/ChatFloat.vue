@@ -506,4 +506,18 @@ watch(
   resize: none;
   box-shadow: none;
 }
+
+@media (max-width: 767px) {
+  .chat-panel {
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+  }
+  .chat-fab {
+    right: 16px;
+    bottom: 16px;
+  }
+}
 </style>

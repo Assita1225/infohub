@@ -13,3 +13,9 @@ export const getTrashNotes = (params) => request.get('/notes/trash', { params })
 
 // 全文搜索
 export const searchNotes = (params) => request.get('/notes/search', { params })
+
+// 导出
+export const exportNote = (id) =>
+  request.get(`/notes/${id}/export`, { responseType: 'blob' })
+export const exportNotesBatch = (ids) =>
+  request.post('/notes/export-batch', { ids }, { responseType: 'blob' })

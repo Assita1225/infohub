@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, send_file
 
 from app.common.auth import login_required
 from app.common.response import success, fail, paginated
@@ -6,6 +6,7 @@ from . import notes_bp
 from .services import (
     create_note, list_notes, get_note, update_note,
     soft_delete_note, restore_note, search_notes, list_trash,
+    export_note_md, export_notes_batch,
 )
 
 
@@ -43,6 +44,19 @@ def search():
     page_size = request.args.get('page_size', 20, type=int)
     items, total = search_notes(q, page, page_size)
     return paginated(items, total, page, page_size)
+
+
+@notes_bp.route('/export-batch', methods=['POST'])
+@login_required
+def batch_export():
+    """批量导出笔记为 zip"""
+    data = request.get_json(silent=True) or {}
+    ids = data.get('ids', [])
+    if not ids:
+        return fail("请选择要导出的笔记")
+    buf = export_notes_batch(ids)
+    return send_file(buf, mimetype='application/zip',
+                     as_attachment=True, download_name='notes_export.zip')
 
 
 @notes_bp.route('/trash', methods=['GET'])
@@ -89,3 +103,16 @@ def do_restore(note_id):
     if not restore_note(note_id):
         return fail("笔记不存在或未删除", 404)
     return success(None, "已恢复")
+
+
+@notes_bp.route('/<note_id>/export', methods=['GET'])
+@login_required
+def export_single(note_id):
+    """导出单篇笔记为 Markdown"""
+    import io
+    filename, content = export_note_md(note_id)
+    if filename is None:
+        return fail("笔记不存在", 404)
+    buf = io.BytesIO(content.encode('utf-8'))
+    return send_file(buf, mimetype='text/markdown',
+                     as_attachment=True, download_name=filename)

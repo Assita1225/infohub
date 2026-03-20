@@ -8,7 +8,7 @@ from .services import (
     get_feed_groups, create_group_record, rename_group, delete_group,
     list_articles, get_article, mark_read,
     toggle_favorite, summarize_article, get_rss_stats,
-    article_to_note,
+    article_to_note, get_reading_timeline, get_feeds_health,
 )
 from .tasks import refresh_feed, refresh_all_feeds
 
@@ -175,6 +175,21 @@ def to_note(article_id):
     if error:
         return fail(error, 404)
     return success(note, "已保存到笔记本")
+
+
+# ── 时间线 & 图谱 & 健康 ──
+
+@rss_bp.route('/timeline', methods=['GET'])
+@login_required
+def timeline():
+    days = request.args.get('days', 7, type=int)
+    return success(get_reading_timeline(days))
+
+
+@rss_bp.route('/feeds/health', methods=['GET'])
+@login_required
+def feeds_health():
+    return success(get_feeds_health())
 
 
 # ── 统计 ──

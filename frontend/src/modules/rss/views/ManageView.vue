@@ -37,6 +37,31 @@
       </el-table-column>
     </el-table>
 
+    <!-- 源健康状态 -->
+    <div class="health-section">
+      <h4 class="health-title">源健康状态</h4>
+      <div v-loading="healthLoading" class="health-grid">
+        <div
+          v-for="h in healthData"
+          :key="h._id"
+          :class="['health-card', `health-${h.status}`]"
+        >
+          <div class="health-indicator" />
+          <div class="health-info">
+            <div class="health-name">{{ h.title }}</div>
+            <div class="health-detail">
+              <span>成功率：{{ h.success_rate }}%</span>
+              <span v-if="h.error_count > 0">连续失败：{{ h.error_count }} 次</span>
+              <span v-if="h.last_fetched_at">上次抓取：{{ formatTime(h.last_fetched_at) }}</span>
+              <span v-else>尚未抓取</span>
+            </div>
+            <div v-if="h.last_error" class="health-error">{{ h.last_error }}</div>
+          </div>
+        </div>
+        <div v-if="!healthLoading && healthData.length === 0" class="health-empty">暂无订阅源</div>
+      </div>
+    </div>
+
     <!-- 添加/编辑对话框 -->
     <el-dialog v-model="showDialog" :title="editId ? '编辑订阅源' : '添加订阅源'" width="480px">
       <el-form :model="form" label-width="80px">
@@ -74,7 +99,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { getFeeds, getFeedGroups, addFeed, updateFeed, deleteFeed } from '../api'
+import { getFeeds, getFeedGroups, addFeed, updateFeed, deleteFeed, getFeedsHealth } from '../api'
 
 const loading = ref(false)
 const saving = ref(false)
@@ -82,6 +107,9 @@ const feeds = ref([])
 const groups = ref([])
 const showAdd = ref(false)
 const editId = ref(null)
+
+const healthLoading = ref(false)
+const healthData = ref([])
 
 const form = reactive({ title: '', url: '', group: '未分组', feed_type: 'rss', css_selector: '' })
 
@@ -140,7 +168,24 @@ async function handleDelete(id) {
   } catch { ElMessage.error('删除失败') }
 }
 
-onMounted(loadData)
+async function loadHealth() {
+  healthLoading.value = true
+  try {
+    const res = await getFeedsHealth()
+    healthData.value = res.data
+  } catch { /* ignore */ }
+  healthLoading.value = false
+}
+
+function formatTime(iso) {
+  if (!iso) return ''
+  return iso.replace('T', ' ').slice(0, 16)
+}
+
+onMounted(() => {
+  loadData()
+  loadHealth()
+})
 </script>
 
 <style scoped>
@@ -167,5 +212,75 @@ onMounted(loadData)
   color: var(--text-secondary, #909399);
   line-height: 1.4;
   margin-top: 4px;
+}
+
+.health-section {
+  margin-top: 32px;
+  border-top: 1px solid var(--border-light, #e4e7ed);
+  padding-top: 20px;
+}
+
+.health-title {
+  margin: 0 0 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.health-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 10px;
+}
+
+.health-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-light, #e4e7ed);
+  background: var(--bg-card, #fff);
+}
+
+.health-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.health-healthy .health-indicator { background: #67c23a; }
+.health-warning .health-indicator { background: #e6a23c; }
+.health-danger .health-indicator { background: #f56c6c; }
+
+.health-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.health-detail {
+  font-size: 12px;
+  color: var(--text-secondary, #909399);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.health-error {
+  font-size: 11px;
+  color: #f56c6c;
+  margin-top: 4px;
+  word-break: break-all;
+}
+
+.health-empty {
+  color: var(--text-muted, #c0c4cc);
+  font-size: 13px;
+  padding: 20px;
+  text-align: center;
 }
 </style>

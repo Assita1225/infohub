@@ -11,7 +11,7 @@
     <grid-layout
       v-if="layout.length"
       v-model:layout="layout"
-      :col-num="6"
+      :col-num="colNum"
       :row-height="36"
       :margin="[16, 16]"
       :is-draggable="true"
@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { GridLayout, GridItem } from 'grid-layout-plus'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Monitor, Plus, Close } from '@element-plus/icons-vue'
@@ -102,7 +102,14 @@ const layout = ref([])
 const activeWidgetIds = ref([])
 const loading = ref(true)
 const showSelector = ref(false)
+const colNum = ref(window.innerWidth < 768 ? 1 : 6)
 let saveTimer = null
+
+function onResize() {
+  colNum.value = window.innerWidth < 768 ? 1 : 6
+}
+onMounted(() => window.addEventListener('resize', onResize))
+onBeforeUnmount(() => window.removeEventListener('resize', onResize))
 
 const greeting = computed(() => {
   const h = new Date().getHours()
@@ -256,5 +263,13 @@ onMounted(loadLayout)
   color: var(--text-muted);
   font-size: 14px;
   gap: 12px;
+}
+
+@media (max-width: 767px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
 }
 </style>

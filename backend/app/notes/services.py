@@ -134,6 +134,57 @@ def search_notes(q, page=1, page_size=20):
     return [_str_id(n) for n in items], total
 
 
+def export_note_md(note_id):
+    """导出笔记为 Markdown 字符串，返回 (filename, content) 或 (None, None)"""
+    doc = get_note(note_id)
+    if not doc:
+        return None, None
+
+    lines = [f"# {doc.get('title', '无标题')}\n"]
+
+    tags = doc.get("tags", [])
+    if tags:
+        lines.append(f"**标签：** {', '.join(tags)}\n")
+
+    source = doc.get("source", {})
+    if source.get("type") != "manual" and source.get("article_url"):
+        lines.append(f"**来源：** [{source['type']}]({source['article_url']})\n")
+
+    lines.append(f"\n{doc.get('content', '')}")
+
+    # 安全文件名
+    import re
+    safe_title = re.sub(r'[\\/*?:"<>|]', '_', doc.get('title', '无标题'))[:80]
+    filename = f"{safe_title}.md"
+    content = "\n".join(lines)
+    return filename, content
+
+
+def export_notes_batch(note_ids):
+    """批量导出笔记为 zip，返回 BytesIO"""
+    import io
+    import zipfile
+    import re
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+        seen_names = {}
+        for nid in note_ids:
+            filename, content = export_note_md(nid)
+            if filename is None:
+                continue
+            # 处理重名
+            if filename in seen_names:
+                seen_names[filename] += 1
+                base, ext = filename.rsplit('.', 1)
+                filename = f"{base}_{seen_names[filename]}.{ext}"
+            else:
+                seen_names[filename] = 0
+            zf.writestr(filename, content.encode('utf-8'))
+    buf.seek(0)
+    return buf
+
+
 def list_trash(page=1, page_size=20):
     query = {"is_deleted": True}
     total = mongo.db.notes.count_documents(query)

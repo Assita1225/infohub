@@ -9,6 +9,7 @@
         <span v-if="saving" class="save-hint">保存中...</span>
         <span v-else-if="lastSaved" class="save-hint">已保存</span>
         <el-button type="primary" @click="handleSave" :loading="saving">保存</el-button>
+        <el-button v-if="noteId" @click="handleExport">导出</el-button>
         <el-popconfirm
           v-if="noteId"
           title="确认删除此笔记？"
@@ -83,7 +84,7 @@ import { ArrowLeft, Link } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
-import { getNote, createNote, updateNote, deleteNote } from '../api'
+import { getNote, createNote, updateNote, deleteNote, exportNote } from '../api'
 
 const route = useRoute()
 const router = useRouter()
@@ -183,6 +184,22 @@ async function handleSave() {
   }
 }
 
+async function handleExport() {
+  try {
+    const res = await exportNote(noteId.value)
+    const url = URL.createObjectURL(res)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${title.value || '笔记'}.md`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } catch {
+    ElMessage.error('导出失败')
+  }
+}
+
 async function handleDelete() {
   try {
     await deleteNote(noteId.value)
@@ -272,5 +289,16 @@ onMounted(() => {
   min-height: 0;
   overflow: hidden;
   border-radius: var(--radius-md);
+}
+
+@media (max-width: 767px) {
+  .note-edit-page {
+    padding: 12px;
+    height: calc(100vh - 88px);
+  }
+  .edit-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 }
 </style>

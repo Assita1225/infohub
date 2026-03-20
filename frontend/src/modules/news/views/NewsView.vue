@@ -1,5 +1,6 @@
 <template>
   <div class="news-page">
+    <p class="page-subtitle">看看世界正在发生什么</p>
     <!-- 顶部操作栏 -->
     <div class="news-header">
       <div class="category-tabs">
@@ -181,6 +182,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.page-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 16px;
+}
+
 /* 胶囊标签 */
 .category-tabs {
   display: flex;
@@ -312,5 +319,18 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   margin-top: 24px;
+}
+
+@media (max-width: 767px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+  .news-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .header-actions {
+    justify-content: flex-end;
+  }
 }
 </style>

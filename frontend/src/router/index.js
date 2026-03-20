@@ -30,6 +30,11 @@ const routes = [
         component: () => import('@/modules/dashboard/views/DashboardView.vue'),
       },
       {
+        path: 'overview',
+        name: 'Overview',
+        component: () => import('@/modules/overview/views/OverviewView.vue'),
+      },
+      {
         path: 'rss',
         name: 'RSS',
         component: () => import('@/modules/rss/views/RssView.vue'),
@@ -38,6 +43,11 @@ const routes = [
         path: 'rss/manage',
         name: 'RSSManage',
         component: () => import('@/modules/rss/views/ManageView.vue'),
+      },
+      {
+        path: 'rss/timeline',
+        name: 'RSSTimeline',
+        component: () => import('@/modules/rss/views/TimelineView.vue'),
       },
       {
         path: 'rss/article/:id',
@@ -78,6 +88,36 @@ const routes = [
         path: 'notes/:id',
         name: 'NoteEdit',
         component: () => import('@/modules/notes/views/NoteEditView.vue'),
+      },
+      {
+        path: 'tools',
+        name: 'Tools',
+        component: () => import('@/modules/tools/views/ToolsView.vue'),
+      },
+      {
+        path: 'tools/translate',
+        name: 'ToolTranslate',
+        component: () => import('@/modules/tools/views/TranslateView.vue'),
+      },
+      {
+        path: 'tools/polish',
+        name: 'ToolPolish',
+        component: () => import('@/modules/tools/views/PolishView.vue'),
+      },
+      {
+        path: 'tools/summarize',
+        name: 'ToolSummarize',
+        component: () => import('@/modules/tools/views/SummarizeView.vue'),
+      },
+      {
+        path: 'habits',
+        name: 'Habits',
+        component: () => import('@/modules/habits/views/HabitsView.vue'),
+      },
+      {
+        path: 'finance',
+        name: 'Finance',
+        component: () => import('@/modules/finance/views/FinanceView.vue'),
       },
     ],
   },

@@ -1,5 +1,6 @@
 <template>
   <div class="rss-page">
+    <p class="page-subtitle">{{ subtitle }}</p>
     <!-- 顶部操作栏 -->
     <div class="rss-toolbar">
       <div class="group-tabs">
@@ -21,6 +22,7 @@
         <el-button type="primary" @click="handleRefreshAll" :loading="refreshingAll">
           刷新全部
         </el-button>
+        <el-button @click="$router.push('/rss/timeline')">时间线</el-button>
         <el-button @click="$router.push('/rss/manage')">管理订阅源</el-button>
       </div>
     </div>
@@ -124,7 +126,7 @@ import { Refresh, WarningFilled, Setting, Connection } from '@element-plus/icons
 import { ElMessage } from 'element-plus'
 import {
   getFeeds, getFeedGroups, refreshFeed, refreshAllFeeds, getFeedArticles,
-  createGroup, renameGroup, deleteGroup,
+  createGroup, renameGroup, deleteGroup, getRssStats,
 } from '../api'
 
 const groupColors = ['#C45A3C', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6']
@@ -134,6 +136,8 @@ const refreshingAll = ref(false)
 const activeGroup = ref('')
 const groups = ref([])
 const feeds = ref([])
+
+const subtitle = ref('我的专属信息源')
 
 const showGroupDialog = ref(false)
 const newGroupName = ref('')
@@ -256,13 +260,28 @@ function formatTime(iso) {
   return d.toLocaleDateString('zh-CN')
 }
 
+async function loadSubtitle() {
+  try {
+    const res = await getRssStats()
+    const unread = res.data.unread_count
+    if (unread != null) subtitle.value = `今天有 ${unread} 条新内容等你查看`
+  } catch { /* fallback already set */ }
+}
+
 onMounted(() => {
   loadGroups()
   loadFeeds()
+  loadSubtitle()
 })
 </script>
 
 <style scoped>
+.page-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 16px;
+}
+
 /* 胶囊标签 */
 .group-tabs {
   display: flex;
@@ -478,5 +497,18 @@ onMounted(() => {
   text-align: center;
   color: var(--text-muted);
   padding: 20px 0;
+}
+
+@media (max-width: 767px) {
+  .feed-grid {
+    grid-template-columns: 1fr;
+  }
+  .rss-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .toolbar-actions {
+    justify-content: flex-end;
+  }
 }
 </style>

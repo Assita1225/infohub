@@ -27,5 +27,9 @@ export const articleToNote = (id) => request.post(`/rss/articles/${id}/to-note`)
 // AI 摘要
 export const summarizeArticle = (id) => request.post(`/rss/articles/${id}/summarize`)
 
+// 时间线 & 健康
+export const getTimeline = (days = 7) => request.get('/rss/timeline', { params: { days } })
+export const getFeedsHealth = () => request.get('/rss/feeds/health')
+
 // 统计
 export const getRssStats = () => request.get('/rss/stats')

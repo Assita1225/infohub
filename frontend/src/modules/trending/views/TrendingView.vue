@@ -1,5 +1,6 @@
 <template>
   <div class="trending-page">
+    <p class="page-subtitle">此刻最热门的话题</p>
     <div class="trending-layout">
       <!-- 左侧：热榜主区域 -->
       <div class="trending-main">
@@ -489,6 +490,12 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.page-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 16px;
+}
+
 .trending-layout {
   display: flex;
   gap: 24px;
@@ -510,6 +517,20 @@ onBeforeUnmount(() => {
   }
   .recommend-panel {
     width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .trending-layout {
+    flex-direction: column;
+  }
+  .recommend-panel {
+    width: 100%;
+  }
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 }
 
